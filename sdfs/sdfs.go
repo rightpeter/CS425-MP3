@@ -5,6 +5,7 @@ package sdfs
 
 import (
 	"encoding/json"
+	"log"
 
 	"CS425/CS425-MP1/model"
 	failureDetector "CS425/CS425-MP2/server"
@@ -74,9 +75,6 @@ func (s *SDFS) JoinToGroup() error {
 
 // StartFailureDetector StartFailureDetector
 func (s *SDFS) StartFailureDetector() {
-	go s.failureDetector.ServerLoop()
 	go s.failureDetector.FailureDetection()
-	for {
-
-	}
+	s.failureDetector.ServerLoop()
 }
