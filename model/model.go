@@ -37,18 +37,8 @@ type NodesConfig struct {
 	Nodes   []NodeConfig `json:"nodes"`
 }
 
-// FileIndex will store filename and IPs of machines with that file
-type FileIndex struct {
-	FileName []string
-}
-
-// NodeIndex will store machine IP and filenames on that machine
-type NodeIndex struct {
-	IP []string
-}
-
-// GlobalIndexFile contain node and file indexes. Will be same across all alive processes
+// GlobalIndexFile contain maps which will give node->file and file->node mappings
 type GlobalIndexFile struct {
-	Files []FileIndex
-	Nodes []NodeIndex
+	Files map[string][]string
+	Nodes map[string][]string
 }
