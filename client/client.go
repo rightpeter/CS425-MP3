@@ -37,6 +37,17 @@ func (c *Client) writeFile(filename string, fileContent []byte) error {
 	return nil
 }
 
+func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (string, error) {
+	fmt.Println("filename: ", filename)
+	var reply string
+	err := client.Call("Server.DeleteFile", &filename, &reply)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	return reply, nil
+}
+
 func (c *Client) callPushFileRPC(client *rpc.Client, filename string) (string, error) {
 	fmt.Println("filename: ", filename)
 	fileContent, err := c.readFileContent(filename)
@@ -103,6 +114,19 @@ func (c *Client) pullFile(filename string) model.RPCResult {
 	return result
 }
 
+func (c *Client) deleteFile(filename string) error {
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", 8080))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+
+	_, err = c.callDeleteFileRPC(client, filename)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	// configFile, e := ioutil.ReadFile("./config.json")
 	// if e != nil {
@@ -114,5 +138,6 @@ func main() {
 
 	c.pushFile(os.Args[1])
 	c.pullFile("pull.txt")
+	c.deleteFile("del.txt")
 
 }

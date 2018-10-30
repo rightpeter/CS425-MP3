@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"os"
 
 	"CS425/CS425-MP3/model"
 )
@@ -66,7 +67,25 @@ func (s *Server) readFileContent(filename string) ([]byte, error) {
 	return content, nil
 }
 
-// PushFile RPC to call grep on server
+func (s *Server) deleteFile(filename string) error {
+	err := os.Remove(filename)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
+// DeleteFile RPC to delete file
+func (s *Server) DeleteFile(filename *string, reply *string) error {
+	err := s.deleteFile(*filename)
+	if err != nil {
+		return err
+	}
+	*reply = "success"
+	return err
+}
+
+// PushFile RPC
 func (s *Server) PushFile(args *model.RPCPushFileArgs, reply *string) error {
 	fmt.Println("File: ", args.Filename)
 	fmt.Println("Content: ", args.FileContent)
@@ -78,7 +97,7 @@ func (s *Server) PushFile(args *model.RPCPushFileArgs, reply *string) error {
 	return err
 }
 
-// PullFile RPC to call grep on server
+// PullFile RPC
 func (s *Server) PullFile(filename *string, reply *model.RPCPushFileArgs) error {
 	fmt.Println("File: ", *filename)
 	fileContent, err := s.readFileContent(*filename)
