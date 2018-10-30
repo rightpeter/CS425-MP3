@@ -1,1 +1,4 @@
 *.txt
+
+config.json
+failure_detector.config.json
