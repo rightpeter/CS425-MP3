@@ -51,9 +51,5 @@ func main() {
 	}
 
 	log.Printf("Starting server on IP: %s and port: %d\n\n", s.GetIP(), s.GetPort())
-	s.StartFailureDetector()
-
-	for {
-
-	}
+	go s.StartFailureDetector()
 }

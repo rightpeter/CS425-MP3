@@ -76,4 +76,7 @@ func (s *SDFS) JoinToGroup() error {
 func (s *SDFS) StartFailureDetector() {
 	go s.failureDetector.ServerLoop()
 	go s.failureDetector.FailureDetection()
+	for {
+
+	}
 }
