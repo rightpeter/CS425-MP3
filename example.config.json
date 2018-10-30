@@ -6,6 +6,6 @@
     "dissemination_timeout": 600,
     "fail_timeout": 400,
     "ttl": 2,
-    "log_path": "/tmp/mp2.log",
+    "log_path": "/tmp/mp3.log",
     "introducer_ip": "172.22.154.106"
 }
