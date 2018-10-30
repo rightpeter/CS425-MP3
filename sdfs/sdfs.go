@@ -5,6 +5,8 @@ package sdfs
 
 import (
 	"encoding/json"
+	"log"
+	"time"
 
 	"CS425/CS425-MP1/model"
 	failureDetector "CS425/CS425-MP2/server"
@@ -74,6 +76,19 @@ func (s *SDFS) JoinToGroup() error {
 
 // StartFailureDetector StartFailureDetector
 func (s *SDFS) StartFailureDetector() {
-	go s.failureDetector.FailureDetection()
-	s.failureDetector.ServerLoop()
+	for {
+		err := s.failureDetector.JoinToGroup()
+		if err != nil {
+			log.Printf("join to group failed: %s\n", err.Error())
+			log.Printf("try to join to group 5 seconds later...")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		log.Printf("join to group successfully\n\n")
+		break
+	}
+
+	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
+	go s.failureDetector.ServerLoop()
+	s.failureDetector.FailureDetection()
 }

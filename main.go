@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"time"
 )
 
 // This function will register and initiate server
@@ -38,18 +37,5 @@ func main() {
 
 	log.SetOutput(f)
 
-	for {
-		err = s.JoinToGroup()
-		if err != nil {
-			log.Printf("join to group failed: %s\n", err.Error())
-			log.Printf("try to join to group 5 seconds later...")
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		log.Printf("join to group successfully\n\n")
-		break
-	}
-
-	log.Printf("Starting server on IP: %s and port: %d\n\n", s.GetIP(), s.GetPort())
 	s.StartFailureDetector()
 }
