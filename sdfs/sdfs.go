@@ -55,23 +55,19 @@ func (s *SDFS) GetPort() int {
 	return s.config.Port
 }
 
+func (s *SDFS) updateMemberList() error {
+	s.sortedMemList = s.failureDetector.GetMemberList()
+}
+
 // GetMemberList return sortedMemList
 func (s *SDFS) GetMemberList() []string {
+	s.updateMemberList()
 	return s.sortedMemList
 }
 
 // SetPort setport for SDFS
 func (s *SDFS) SetPort(port int) {
 	s.config.Port = port
-}
-
-// JoinToGroup jointogroup
-func (s *SDFS) JoinToGroup() error {
-	err := s.failureDetector.JoinToGroup()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // StartFailureDetector StartFailureDetector

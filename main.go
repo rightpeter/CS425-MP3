@@ -38,4 +38,7 @@ func main() {
 	log.SetOutput(f)
 
 	s.StartFailureDetector()
+	for {
+		log.Printf("MemberList: %v", s.GetMemberList())
+	}
 }
