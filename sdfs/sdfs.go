@@ -55,7 +55,7 @@ func (s *SDFS) GetPort() int {
 	return s.config.Port
 }
 
-func (s *SDFS) updateMemberList() error {
+func (s *SDFS) updateMemberList() {
 	s.sortedMemList = s.failureDetector.GetMemberList()
 }
 
