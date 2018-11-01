@@ -79,7 +79,10 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 	for _, file := range filesOnNode {
 		ind := i.findIndex(i.index.FileToNodes[file.Filename], id)
 		for _, fv := range i.index.Fileversions[file.Filename] {
-			fv.Nodes = i.removeFromSlice(i.findIndex(fv.Nodes, id), fv.Nodes)
+			ind := i.findIndex(fv.Nodes, id)
+			if ind != -1 {
+				fv.Nodes = i.removeFromSlice(ind, fv.Nodes)
+			}
 		}
 
 		if ind != -1 {
