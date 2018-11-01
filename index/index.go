@@ -125,7 +125,7 @@ func (i *Index) addFile(filename string, hash [SIZE]byte) {
 		if i.nodeHasFile(filename, ip) {
 			continue
 		}
-		if replicas < 0 {
+		if replicas <= 0 {
 			break
 		}
 		replicas--
@@ -212,12 +212,15 @@ func main() {
 	i := NewIndex()
 	i.AddNewNode("ip1")
 	i.AddNewNode("ip2")
-	// i.AddNewNode("ip3")
-	// i.AddNewNode("ip4")
+	i.AddNewNode("ip3")
+	i.AddNewNode("ip4")
+	i.AddNewNode("ip5")
+	i.AddNewNode("ip6")
 
 	i.AddFile("f1", md5.Sum([]byte("f1")))
 	i.AddFile("f2", md5.Sum([]byte("f2")))
 	i.AddFile("f2", md5.Sum([]byte("f2a")))
+	i.AddFile("f3", md5.Sum([]byte("f3")))
 
 	println("Files on ip1")
 	fmt.Println(i.GetFilesOnNode("ip1"))
@@ -227,17 +230,17 @@ func main() {
 	fmt.Println(i.GetNodesWithFile("f1"))
 	println("Nodes with f2")
 	fmt.Println(i.GetNodesWithFile("f2"))
+	println("Nodes with f3")
+	fmt.Println(i.GetNodesWithFile("f3"))
 
 	fmt.Println("----- Removing f2 -----")
 	i.RemoveFile("f2")
-	println("Files on ip1")
-	fmt.Println(i.GetFilesOnNode("ip1"))
-	println("Files on ip2")
-	fmt.Println(i.GetFilesOnNode("ip2"))
 	println("Nodes with f1")
 	fmt.Println(i.GetNodesWithFile("f1"))
 	println("Nodes with f2")
 	fmt.Println(i.GetNodesWithFile("f2"))
+	println("Nodes with f3")
+	fmt.Println(i.GetNodesWithFile("f3"))
 	// fmt.Println("files: ", i.index.Files)
 	// fmt.Println("nodes: ", i.index.Nodes)
 	// fmt.Println("-----------------")
