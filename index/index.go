@@ -253,6 +253,11 @@ func (i *Index) GetFilesOnNode(IP string) []model.FileStructure {
 	return v
 }
 
+// GetGlobalIndexFile return GlobalIndexFile
+func (i *Index) GetGlobalIndexFile() model.GlobalIndexFile {
+	return i.index
+}
+
 func main() {
 	i := NewIndex()
 	i.AddNewNode("ip1")
@@ -290,7 +295,8 @@ func main() {
 	fmt.Println("----- Removing ip1 -----")
 	println("Files on ip1")
 	fmt.Println(i.GetFilesOnNode("ip1"))
-	i.RemoveNode("ip1")
+	inst := i.RemoveNode("ip1")
+	fmt.Println("inst: ", inst)
 	println("Files on ip1")
 	fmt.Println(i.GetFilesOnNode("ip1"))
 	println("Nodes with f1")
