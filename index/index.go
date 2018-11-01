@@ -59,7 +59,7 @@ func (i *Index) RemoveNode(ip string) []model.PullInstruction {
 			if i.index.Filename[file.Filename].Hash == file.Hash && !i.nodeHasFile(file.Filename, node) {
 				// send file and break
 				inst := model.PullInstruction{
-					Filename: file.Filename,
+					Filename: fmt.Sprintf("%s_%d", file.Filename, file.Version),
 					Node:     node,
 					PullFrom: i.GetNodesWithFile(file.Filename), // some node which has filen
 				}
@@ -271,6 +271,7 @@ func main() {
 	i.AddFile("f2", md5.Sum([]byte("f2")))
 	i.AddFile("f2", md5.Sum([]byte("f2a")))
 	i.AddFile("f3", md5.Sum([]byte("f3")))
+	i.AddFile("f3", md5.Sum([]byte("f3a")))
 
 	println("Files on ip1")
 	fmt.Println(i.GetFilesOnNode("ip1"))
