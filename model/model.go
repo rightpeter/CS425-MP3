@@ -1,5 +1,8 @@
 package model
 
+// SIZE md5 size
+const SIZE = 16
+
 // RPCPushFileArgs for push file
 type RPCPushFileArgs struct {
 	Filename    string
@@ -47,13 +50,13 @@ type FileVersion struct {
 	// nodes with that version
 	Version int
 	Nodes   []string
-	Hash    []byte
+	Hash    [SIZE]byte
 }
 
 type FileStructure struct {
 	Version  int
 	Filename string
-	Hash     []byte
+	Hash     [SIZE]byte
 }
 
 type GlobalIndexFile struct {
