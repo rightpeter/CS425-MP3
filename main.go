@@ -42,4 +42,8 @@ func main() {
 	if err != nil {
 		log.Printf("main: Index init failed")
 	}
+
+	for {
+
+	}
 }

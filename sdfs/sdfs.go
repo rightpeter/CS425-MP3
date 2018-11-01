@@ -57,7 +57,7 @@ func (s *SDFS) reElect() error {
 // InitIndex init the index
 func (s *SDFS) InitIndex() error {
 	s.sortedMemList = s.failureDetector.GetMemberList()
-	if s.isMaster() {
+	if s.isMaster() && len(s.sortedMemList) > 1 {
 		err := s.pullIndex(s.sortedMemList[1])
 		if err != nil {
 			return err
