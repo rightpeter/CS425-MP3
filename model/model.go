@@ -69,3 +69,9 @@ type GlobalIndexFile struct {
 	// map from filename to list of nodes with the file
 	FileToNodes map[string][]string
 }
+
+type PullInstruction struct {
+	Filename string
+	Node     string
+	PullFrom []string // IPs with file
+}

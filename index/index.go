@@ -39,18 +39,64 @@ func (i *Index) AddNewNode(ip string) {
 }
 
 // RemoveNode RemoveNode
-func (i *Index) RemoveNode(ip string) []string {
+func (i *Index) RemoveNode(ip string) []model.PullInstruction {
+	instructions := []model.PullInstruction{}
 	delete(i.numFiles, ip)
 	// delete from global file index as well
+	nodes := i.getNodesWithLeastFiles()
+	filesOnNode := i.index.NodesToFile[ip]
+	delete(i.index.NodesToFile, ip)
+
+	for _, file := range filesOnNode {
+		// remove file from FileToNodes
+		ind := i.findIndex(i.index.FileToNodes[file.Filename], ip)
+		// log.Panicf("Removed %s, %")
+		if ind != -1 {
+			i.index.FileToNodes[file.Filename] = i.removeFromSlice(ind, i.index.FileToNodes[file.Filename])
+		}
+		for _, node := range nodes {
+			// send only the latest file version for replication
+			if i.index.Filename[file.Filename].Hash == file.Hash && !i.nodeHasFile(file.Filename, node) {
+				// send file and break
+				inst := model.PullInstruction{
+					Filename: file.Filename,
+					Node:     node,
+					PullFrom: i.GetNodesWithFile(file.Filename), // some node which has filen
+				}
+				instructions = append(instructions, inst)
+
+				// update NodeToFile and FileToNodes
+				fs := model.FileStructure{
+					Version:  file.Version,
+					Filename: file.Filename,
+					Hash:     file.Hash,
+				}
+				i.index.NodesToFile[node] = append(i.index.NodesToFile[node], fs)
+
+				// update FileToNodes
+				i.index.FileToNodes[file.Filename] = append(i.index.FileToNodes[file.Filename], node)
+				break
+			}
+		}
+	}
+
+	return instructions
+
 	// Will also need to rereplicate and send new list of nodes with
+
+	// get list of nodes sorted by num of files on them
+	// for files on removed node:
+	// if node does not comtain file, give it an instruction to go pull file from a node with that file
+	// Will also need to change Nodes to File and FileToNodes accordingly
 	return nil
 }
 
-func (i *Index) removeFromSlice(ind int, slice []interface{}) []interface{} {
+func (i *Index) removeFromSlice(ind int, slice []string) []string {
+	log.Println("removeFromSlice ", slice, ind)
 	if ind == len(slice) {
 		return slice[:ind]
 	}
-	return append(slice[:ind], slice[ind+1:])
+	return append(slice[:ind], slice[ind+1:]...)
 }
 func (i *Index) findIndex(list []string, elem string) int {
 	for ind, e := range list {
@@ -61,11 +107,10 @@ func (i *Index) findIndex(list []string, elem string) int {
 	return -1
 }
 
-func (i *Index) getNodesWithLeastFiles(table map[string]int) []string {
-	log.Println("getNodesWithLeastFiles table: ", table)
+func (i *Index) getNodesWithLeastFiles() []string {
 	lenIP := make(map[int][]string)
 	var lens []int
-	for k, v := range table {
+	for k, v := range i.numFiles {
 		_, ok := lenIP[v]
 		if !ok {
 			lenIP[v] = make([]string, 0)
@@ -110,7 +155,7 @@ func (i *Index) nodeHasFile(filename, ip string) bool {
 // AddFile add file for first time
 func (i *Index) addFile(filename string, hash [SIZE]byte) {
 	replicas := REPLICAS
-	nodes := i.getNodesWithLeastFiles(i.numFiles)
+	nodes := i.getNodesWithLeastFiles()
 	log.Println("Nodes with least files: ", nodes)
 
 	fs := model.FileStructure{
@@ -233,35 +278,26 @@ func main() {
 	println("Nodes with f3")
 	fmt.Println(i.GetNodesWithFile("f3"))
 
-	fmt.Println("----- Removing f2 -----")
-	i.RemoveFile("f2")
+	// fmt.Println("----- Removing f2 -----")
+	// i.RemoveFile("f2")
+	// println("Nodes with f1")
+	// fmt.Println(i.GetNodesWithFile("f1"))
+	// println("Nodes with f2")
+	// fmt.Println(i.GetNodesWithFile("f2"))
+	// println("Nodes with f3")
+	// fmt.Println(i.GetNodesWithFile("f3"))
+
+	fmt.Println("----- Removing ip1 -----")
+	println("Files on ip1")
+	fmt.Println(i.GetFilesOnNode("ip1"))
+	i.RemoveNode("ip1")
+	println("Files on ip1")
+	fmt.Println(i.GetFilesOnNode("ip1"))
 	println("Nodes with f1")
 	fmt.Println(i.GetNodesWithFile("f1"))
 	println("Nodes with f2")
 	fmt.Println(i.GetNodesWithFile("f2"))
 	println("Nodes with f3")
 	fmt.Println(i.GetNodesWithFile("f3"))
-	// fmt.Println("files: ", i.index.Files)
-	// fmt.Println("nodes: ", i.index.Nodes)
-	// fmt.Println("-----------------")
-	// fmt.Println("Removing f1")
-	// i.RemoveFile("f1")
-	// fmt.Println("files: ", i.index.Files)
-	// fmt.Println("nodes: ", i.index.Nodes)
-	// fmt.Println("Removing f2 and f3")
-	// i.RemoveFile("f2")
-	// i.RemoveFile("f3")
-	// fmt.Println("files: ", i.index.Files)
-	// fmt.Println("nodes: ", i.index.Nodes)
-	// fmt.Println("Removing f2 and f3 again")
-	// i.RemoveFile("f2")
-	// i.RemoveFile("f3")
-	// fmt.Println("files: ", i.index.Files)
-	// fmt.Println("nodes: ", i.index.Nodes)
-
-	// println("Files on ip1")
-	// fmt.Println(i.GetFilesOnNode("ip1"))
-	// println("Nodes with on f1")
-	// fmt.Println(i.GetNodesWithFile("f1"))
 
 }
