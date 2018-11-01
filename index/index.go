@@ -33,6 +33,19 @@ func NewIndex() *Index {
 	return &i
 }
 
+// LoadFromGlobalIndexFile crLoadFromGlobalIndexFile
+func LoadFromGlobalIndexFile(file model.GlobalIndexFile) *Index {
+	var i Index
+	i.index = model.GlobalIndexFile{
+		Filename:     file.Filename,
+		Fileversions: file.Fileversions,
+		NodesToFile:  file.NodesToFile,
+		FileToNodes:  file.FileToNodes,
+	}
+	i.numFiles = make(map[string]int)
+	return &i
+}
+
 // AddNewNode AddNewNode
 func (i *Index) AddNewNode(id string) {
 	i.numFiles[id] = 0
