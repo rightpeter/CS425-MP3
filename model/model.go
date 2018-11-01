@@ -64,7 +64,7 @@ type GlobalIndexFile struct {
 	Filename map[string]FileStructure
 	// map from Filename to different file versions
 	Fileversions map[string][]FileVersion
-	// map from node IP to list of files on the node
+	// map from node ID to list of files on the node
 	NodesToFile map[string][]FileStructure
 	// map from filename to list of nodes with the file
 	FileToNodes map[string][]string
@@ -73,5 +73,5 @@ type GlobalIndexFile struct {
 type PullInstruction struct {
 	Filename string
 	Node     string
-	PullFrom []string // IPs with file
+	PullFrom []string // IDs with file
 }

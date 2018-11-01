@@ -34,22 +34,22 @@ func NewIndex() *Index {
 }
 
 // AddNewNode AddNewNode
-func (i *Index) AddNewNode(ip string) {
-	i.numFiles[ip] = 0
+func (i *Index) AddNewNode(id string) {
+	i.numFiles[id] = 0
 }
 
 // RemoveNode RemoveNode
-func (i *Index) RemoveNode(ip string) []model.PullInstruction {
+func (i *Index) RemoveNode(id string) []model.PullInstruction {
 	instructions := []model.PullInstruction{}
-	delete(i.numFiles, ip)
+	delete(i.numFiles, id)
 	// delete from global file index as well
 	nodes := i.getNodesWithLeastFiles()
-	filesOnNode := i.index.NodesToFile[ip]
-	delete(i.index.NodesToFile, ip)
+	filesOnNode := i.index.NodesToFile[id]
+	delete(i.index.NodesToFile, id)
 
 	for _, file := range filesOnNode {
 		// remove file from FileToNodes
-		ind := i.findIndex(i.index.FileToNodes[file.Filename], ip)
+		ind := i.findIndex(i.index.FileToNodes[file.Filename], id)
 		// log.Panicf("Removed %s, %")
 		if ind != -1 {
 			i.index.FileToNodes[file.Filename] = i.removeFromSlice(ind, i.index.FileToNodes[file.Filename])
@@ -111,14 +111,14 @@ func (i *Index) findIndex(list []string, elem string) int {
 }
 
 func (i *Index) getNodesWithLeastFiles() []string {
-	lenIP := make(map[int][]string)
+	lenid := make(map[int][]string)
 	var lens []int
 	for k, v := range i.numFiles {
-		_, ok := lenIP[v]
+		_, ok := lenid[v]
 		if !ok {
-			lenIP[v] = make([]string, 0)
+			lenid[v] = make([]string, 0)
 		}
-		lenIP[v] = append(lenIP[v], k)
+		lenid[v] = append(lenid[v], k)
 		if len(lens) > 0 && lens[len(lens)-1] != v {
 			lens = append(lens, v)
 		} else if len(lens) == 0 {
@@ -127,11 +127,11 @@ func (i *Index) getNodesWithLeastFiles() []string {
 	}
 	log.Println("getNodesWithLeastFiles lens:", lens)
 	sort.Ints(lens)
-	var SortedIPs []string
+	var Sortedids []string
 	for _, val := range lens {
-		SortedIPs = append(SortedIPs, lenIP[val]...)
+		Sortedids = append(Sortedids, lenid[val]...)
 	}
-	return SortedIPs
+	return Sortedids
 }
 
 // AddFile AddFile
@@ -146,8 +146,8 @@ func (i *Index) AddFile(filename string, hash [SIZE]byte) {
 	i.updateFile(filename, hash)
 }
 
-func (i *Index) nodeHasFile(filename, ip string) bool {
-	for _, val := range i.index.NodesToFile[ip] {
+func (i *Index) nodeHasFile(filename, id string) bool {
+	for _, val := range i.index.NodesToFile[id] {
 		if val.Filename == filename {
 			return true
 		}
@@ -174,26 +174,26 @@ func (i *Index) addFile(filename string, hash [SIZE]byte) {
 		Hash:    hash,
 	}
 
-	for _, ip := range nodes {
-		if i.nodeHasFile(filename, ip) {
+	for _, id := range nodes {
+		if i.nodeHasFile(filename, id) {
 			continue
 		}
 		if replicas <= 0 {
 			break
 		}
 		replicas--
-		i.numFiles[ip]++
+		i.numFiles[id]++
 
 		// Get old file version or create new and append nodes
-		nodesWithFile = append(nodesWithFile, ip)
+		nodesWithFile = append(nodesWithFile, id)
 		for _, f := range i.index.Fileversions[filename] {
 			if f.Version == i.index.Filename[filename].Version {
 				fv = f
 			}
 		}
-		fv.Nodes = append(fv.Nodes, ip)
-		i.index.NodesToFile[ip] = append(i.index.NodesToFile[ip], fs)
-		i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], ip)
+		fv.Nodes = append(fv.Nodes, id)
+		i.index.NodesToFile[id] = append(i.index.NodesToFile[id], fs)
+		i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], id)
 	}
 	fv.Nodes = nodesWithFile
 	i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
@@ -219,20 +219,20 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) {
 		Hash:    hash,
 	}
 	nodesWithFile := make([]string, 0)
-	for _, ip := range nodes {
-		i.numFiles[ip]++
+	for _, id := range nodes {
+		i.numFiles[id]++
 
 		for _, f := range i.index.Fileversions[filename] {
 			if f.Version == i.index.Filename[filename].Version {
 				fv = f
 			}
 		}
-		fv.Nodes = append(fv.Nodes, ip)
+		fv.Nodes = append(fv.Nodes, id)
 
-		i.index.NodesToFile[ip] = append(i.index.NodesToFile[ip], fs)
-		nodesWithFile = append(nodesWithFile, ip)
-		if !i.nodeHasFile(filename, ip) {
-			i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], ip)
+		i.index.NodesToFile[id] = append(i.index.NodesToFile[id], fs)
+		nodesWithFile = append(nodesWithFile, id)
+		if !i.nodeHasFile(filename, id) {
+			i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], id)
 		}
 	}
 	fv.Nodes = nodesWithFile
@@ -242,16 +242,16 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) {
 // RemoveFile add file to GlobalIndexFile
 func (i *Index) RemoveFile(filename string) {
 	nodes := i.index.FileToNodes[filename]
-	for _, ip := range nodes {
-		i.numFiles[ip]--
+	for _, id := range nodes {
+		i.numFiles[id]--
 		delete(i.index.Fileversions, filename)
 		var newFiles []model.FileStructure
-		for _, fs := range i.index.NodesToFile[ip] {
+		for _, fs := range i.index.NodesToFile[id] {
 			if fs.Filename != filename {
 				newFiles = append(newFiles, fs)
 			}
 		}
-		i.index.NodesToFile[ip] = newFiles
+		i.index.NodesToFile[id] = newFiles
 		delete(i.index.FileToNodes, filename)
 	}
 }
@@ -278,8 +278,8 @@ func (i *Index) GetNodesWithFile(filename string) []string {
 }
 
 // GetFilesOnNode get files
-func (i *Index) GetFilesOnNode(IP string) []model.FileStructure {
-	v, ok := i.index.NodesToFile[IP]
+func (i *Index) GetFilesOnNode(id string) []model.FileStructure {
+	v, ok := i.index.NodesToFile[id]
 	if !ok {
 		return nil
 	}
@@ -301,12 +301,12 @@ func (i *Index) GetGlobalIndexFile() model.GlobalIndexFile {
 
 func main() {
 	i := NewIndex()
-	i.AddNewNode("ip1")
-	i.AddNewNode("ip2")
-	i.AddNewNode("ip3")
-	i.AddNewNode("ip4")
-	i.AddNewNode("ip5")
-	i.AddNewNode("ip6")
+	i.AddNewNode("id1")
+	i.AddNewNode("id2")
+	i.AddNewNode("id3")
+	i.AddNewNode("id4")
+	i.AddNewNode("id5")
+	i.AddNewNode("id6")
 
 	i.AddFile("f1", md5.Sum([]byte("f1")))
 	i.AddFile("f2", md5.Sum([]byte("f2")))
@@ -314,10 +314,10 @@ func main() {
 	i.AddFile("f3", md5.Sum([]byte("f3")))
 	i.AddFile("f3", md5.Sum([]byte("f3a")))
 
-	println("Files on ip1")
-	fmt.Println(i.GetFilesOnNode("ip1"))
-	println("Files on ip2")
-	fmt.Println(i.GetFilesOnNode("ip2"))
+	println("Files on id1")
+	fmt.Println(i.GetFilesOnNode("id1"))
+	println("Files on id2")
+	fmt.Println(i.GetFilesOnNode("id2"))
 	println("Nodes with f1")
 	fmt.Println(i.GetNodesWithFile("f1"))
 	println("Nodes with f2")
@@ -334,13 +334,13 @@ func main() {
 	// println("Nodes with f3")
 	// fmt.Println(i.GetNodesWithFile("f3"))
 
-	fmt.Println("----- Removing ip1 -----")
-	println("Files on ip1")
-	fmt.Println(i.GetFilesOnNode("ip1"))
-	inst := i.RemoveNode("ip1")
+	fmt.Println("----- Removing id1 -----")
+	println("Files on id1")
+	fmt.Println(i.GetFilesOnNode("id1"))
+	inst := i.RemoveNode("id1")
 	fmt.Println("inst: ", inst)
-	println("Files on ip1")
-	fmt.Println(i.GetFilesOnNode("ip1"))
+	println("Files on id1")
+	fmt.Println(i.GetFilesOnNode("id1"))
 	println("Nodes with f1")
 	fmt.Println(i.GetNodesWithFile("f1"))
 	println("Nodes with f2")
