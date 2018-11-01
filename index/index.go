@@ -1,4 +1,4 @@
-package main
+package index
 
 import (
 	"CS425/CS425-MP3/model"
@@ -38,19 +38,37 @@ func (i *Index) AddNewNode(id string) {
 	i.numFiles[id] = 0
 }
 
+func (i *Index) getLatestVersion(filename string) int {
+	return i.index.Filename[filename].Version
+}
+
+func (i *Index) getLatestFileVersion(filename string) model.FileVersion {
+	for _, fv := range i.index.Fileversions[filename] {
+		if fv.Version == i.getLatestVersion(filename) {
+			return fv
+		}
+	}
+	return model.FileVersion{}
+}
+
 // RemoveNode RemoveNode
 func (i *Index) RemoveNode(id string) []model.PullInstruction {
 	instructions := []model.PullInstruction{}
 	delete(i.numFiles, id)
+
 	// delete from global file index as well
 	nodes := i.getNodesWithLeastFiles()
 	filesOnNode := i.index.NodesToFile[id]
 	delete(i.index.NodesToFile, id)
 
+	// get fv from Fileversions and remove id in all the versions
+
 	for _, file := range filesOnNode {
-		// remove file from FileToNodes
 		ind := i.findIndex(i.index.FileToNodes[file.Filename], id)
-		// log.Panicf("Removed %s, %")
+		for _, fv := range i.index.Fileversions[file.Filename] {
+			fv.Nodes = i.removeFromSlice(i.findIndex(fv.Nodes, id), fv.Nodes)
+		}
+
 		if ind != -1 {
 			i.index.FileToNodes[file.Filename] = i.removeFromSlice(ind, i.index.FileToNodes[file.Filename])
 		}
@@ -77,6 +95,9 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 				i.index.FileToNodes[file.Filename] = append(i.index.FileToNodes[file.Filename], node)
 
 				//TODO update the Nodes in Fileversions
+
+				latestFV := i.getLatestFileVersion(file.Filename)
+				latestFV.Nodes = append(latestFV.Nodes, node)
 
 				break
 			}
