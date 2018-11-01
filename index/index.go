@@ -75,6 +75,9 @@ func (i *Index) RemoveNode(ip string) []model.PullInstruction {
 
 				// update FileToNodes
 				i.index.FileToNodes[file.Filename] = append(i.index.FileToNodes[file.Filename], node)
+
+				//TODO update the Nodes in Fileversions
+
 				break
 			}
 		}
@@ -154,17 +157,22 @@ func (i *Index) nodeHasFile(filename, ip string) bool {
 
 // AddFile add file for first time
 func (i *Index) addFile(filename string, hash [SIZE]byte) {
-	replicas := REPLICAS
 	nodes := i.getNodesWithLeastFiles()
+	replicas := REPLICAS
+
 	log.Println("Nodes with least files: ", nodes)
+	nodesWithFile := make([]string, 0)
 
 	fs := model.FileStructure{
 		Version:  0,
 		Filename: filename,
 		Hash:     hash,
 	}
-
 	i.index.Filename[filename] = fs
+	fv := model.FileVersion{
+		Version: i.index.Filename[filename].Version,
+		Hash:    hash,
+	}
 
 	for _, ip := range nodes {
 		if i.nodeHasFile(filename, ip) {
@@ -176,16 +184,19 @@ func (i *Index) addFile(filename string, hash [SIZE]byte) {
 		replicas--
 		i.numFiles[ip]++
 
-		fv := model.FileVersion{
-			Version: i.index.Filename[filename].Version,
-			Nodes:   nodes, // incorrect, but might not use it
-			Hash:    hash,
+		// Get old file version or create new and append nodes
+		nodesWithFile = append(nodesWithFile, ip)
+		for _, f := range i.index.Fileversions[filename] {
+			if f.Version == i.index.Filename[filename].Version {
+				fv = f
+			}
 		}
-
-		i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
+		fv.Nodes = append(fv.Nodes, ip)
 		i.index.NodesToFile[ip] = append(i.index.NodesToFile[ip], fs)
 		i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], ip)
 	}
+	fv.Nodes = nodesWithFile
+	i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
 
 }
 
@@ -194,6 +205,7 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) {
 	if reflect.DeepEqual(i.index.Filename[filename].Hash, hash) {
 		return
 	}
+
 	nodes := i.index.FileToNodes[filename]
 	fs := model.FileStructure{
 		Version:  i.index.Filename[filename].Version + 1,
@@ -201,21 +213,30 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) {
 		Hash:     hash,
 	}
 	i.index.Filename[filename] = fs
+
+	fv := model.FileVersion{
+		Version: i.index.Filename[filename].Version,
+		Hash:    hash,
+	}
+	nodesWithFile := make([]string, 0)
 	for _, ip := range nodes {
 		i.numFiles[ip]++
 
-		fv := model.FileVersion{
-			Version: i.index.Filename[filename].Version,
-			Nodes:   nodes,
-			Hash:    hash,
+		for _, f := range i.index.Fileversions[filename] {
+			if f.Version == i.index.Filename[filename].Version {
+				fv = f
+			}
 		}
+		fv.Nodes = append(fv.Nodes, ip)
 
-		i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
 		i.index.NodesToFile[ip] = append(i.index.NodesToFile[ip], fs)
+		nodesWithFile = append(nodesWithFile, ip)
 		if !i.nodeHasFile(filename, ip) {
 			i.index.FileToNodes[filename] = append(i.index.FileToNodes[filename], ip)
 		}
 	}
+	fv.Nodes = nodesWithFile
+	i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
 }
 
 // RemoveFile add file to GlobalIndexFile
@@ -233,6 +254,18 @@ func (i *Index) RemoveFile(filename string) {
 		i.index.NodesToFile[ip] = newFiles
 		delete(i.index.FileToNodes, filename)
 	}
+}
+
+func (i *Index) GetVersions(filename string, numVersions int) []model.FileVersion {
+	versions := i.index.Fileversions[filename]
+	sort.Slice(versions, func(i, j int) bool {
+		return versions[i].Version > versions[j].Version
+	})
+	log.Println(versions)
+	if numVersions > len(versions) {
+		return versions
+	}
+	return versions[:numVersions]
 }
 
 // GetNodesWithFile get nodes
@@ -307,4 +340,7 @@ func main() {
 	println("Nodes with f3")
 	fmt.Println(i.GetNodesWithFile("f3"))
 
+	fmt.Println("----------")
+	fmt.Println("Get file versions")
+	fmt.Println(i.GetVersions("f3", 5))
 }
