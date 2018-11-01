@@ -135,15 +135,14 @@ func (i *Index) getNodesWithLeastFiles() []string {
 }
 
 // AddFile AddFile
-func (i *Index) AddFile(filename string, hash [SIZE]byte) {
+func (i *Index) AddFile(filename string, hash [SIZE]byte) (int, []string) {
 	_, ok := i.index.Filename[filename]
 	if !ok {
 		log.Println("Adding new file: ", filename)
-		i.addFile(filename, hash)
-		return
+		return i.addFile(filename, hash)
 	}
 	log.Println("Updating file: ", filename)
-	i.updateFile(filename, hash)
+	return i.updateFile(filename, hash)
 }
 
 func (i *Index) nodeHasFile(filename, id string) bool {
@@ -156,7 +155,7 @@ func (i *Index) nodeHasFile(filename, id string) bool {
 }
 
 // AddFile add file for first time
-func (i *Index) addFile(filename string, hash [SIZE]byte) {
+func (i *Index) addFile(filename string, hash [SIZE]byte) (int, []string) {
 	nodes := i.getNodesWithLeastFiles()
 	replicas := REPLICAS
 
@@ -198,12 +197,13 @@ func (i *Index) addFile(filename string, hash [SIZE]byte) {
 	fv.Nodes = nodesWithFile
 	i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
 
+	return i.index.Filename[filename].Version, nodesWithFile
 }
 
 // UpdateFile update file
-func (i *Index) updateFile(filename string, hash [SIZE]byte) {
+func (i *Index) updateFile(filename string, hash [SIZE]byte) (int, []string) {
 	if reflect.DeepEqual(i.index.Filename[filename].Hash, hash) {
-		return
+		return i.index.Filename[filename].Version, i.index.FileToNodes[filename]
 	}
 
 	nodes := i.index.FileToNodes[filename]
@@ -237,6 +237,7 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) {
 	}
 	fv.Nodes = nodesWithFile
 	i.index.Fileversions[filename] = append(i.index.Fileversions[filename], fv)
+	return i.index.Filename[filename].Version, nodesWithFile
 }
 
 // RemoveFile add file to GlobalIndexFile
