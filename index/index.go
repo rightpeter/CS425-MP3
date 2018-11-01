@@ -286,6 +286,14 @@ func (i *Index) GetFilesOnNode(IP string) []model.FileStructure {
 	return v
 }
 
+func (i *Index) GetFile(filename string) (int, []string) {
+	versions := i.index.Fileversions[filename]
+	sort.Slice(versions, func(i, j int) bool {
+		return versions[i].Version > versions[j].Version
+	})
+	return versions[0].Version, versions[0].Nodes
+}
+
 // GetGlobalIndexFile return GlobalIndexFile
 func (i *Index) GetGlobalIndexFile() model.GlobalIndexFile {
 	return i.index
@@ -343,4 +351,7 @@ func main() {
 	fmt.Println("----------")
 	fmt.Println("Get file versions")
 	fmt.Println(i.GetVersions("f3", 5))
+	fmt.Println("----------")
+	fmt.Println("Getfile ")
+	fmt.Println(i.GetFile("f3"))
 }
