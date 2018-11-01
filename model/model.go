@@ -58,7 +58,37 @@ type NodeConfig struct {
 }
 
 // GlobalIndexFile contain maps which will give node->file and file->node mappings
+// type GlobalIndexFile struct {
+// 	Files map[string][]string
+// 	Nodes map[string][]string
+// }
+
+type FileVersion struct {
+	// nodes with that version
+	Version int
+	Nodes   []string
+	Hash    [SIZE]byte
+}
+
+type FileStructure struct {
+	Version  int
+	Filename string
+	Hash     [SIZE]byte
+}
+
 type GlobalIndexFile struct {
-	Files map[string][]string
-	Nodes map[string][]string
+	// map from filename->latest md5 hash
+	Filename map[string]FileStructure
+	// map from Filename to different file versions
+	Fileversions map[string][]FileVersion
+	// map from node ID to list of files on the node
+	NodesToFile map[string][]FileStructure
+	// map from filename to list of nodes with the file
+	FileToNodes map[string][]string
+}
+
+type PullInstruction struct {
+	Filename string
+	Node     string
+	PullFrom []string // IDs with file
 }
