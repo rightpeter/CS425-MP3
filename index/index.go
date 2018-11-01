@@ -34,7 +34,7 @@ func NewIndex() *Index {
 }
 
 // LoadFromGlobalIndexFile crLoadFromGlobalIndexFile
-func LoadFromGlobalIndexFile(file model.GlobalIndexFile) *Index {
+func LoadFromGlobalIndexFile(file model.GlobalIndexFile) Index {
 	var i Index
 	i.index = model.GlobalIndexFile{
 		Filename:     file.Filename,
@@ -43,7 +43,7 @@ func LoadFromGlobalIndexFile(file model.GlobalIndexFile) *Index {
 		FileToNodes:  file.FileToNodes,
 	}
 	i.numFiles = make(map[string]int)
-	return &i
+	return i
 }
 
 // AddNewNode AddNewNode

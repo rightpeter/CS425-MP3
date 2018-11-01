@@ -88,7 +88,7 @@ func (s *SDFS) pullIndex(nodeID string) error {
 		return err
 	}
 
-	s.index = SDFSIndex.LoadFromIndex(*globalIndex)
+	s.index = SDFSIndex.LoadFromGlobalIndexFile(*globalIndex)
 	return nil
 }
 
@@ -132,7 +132,8 @@ func (s *SDFS) isMaster() bool {
 
 func (s *SDFS) getRPCClient(nodeID string) (*rpc.Client, error) {
 	client := &rpc.Client{}
-	if client, ok := s.nodesRPCClients[nodeID]; !ok {
+	ok := false
+	if client, ok = s.nodesRPCClients[nodeID]; !ok {
 		return nil, fmt.Errorf("no rpc client for node: %v", nodeID)
 	}
 	return client, nil
@@ -187,7 +188,7 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 func (s *SDFS) updateNewNodes(newNodes []string) []string {
 	failNodes := []string{}
 	for _, node := range newNodes {
-		s.index.AddNode(node)
+		s.index.AddNewNode(node)
 		client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", s.getIPFromID(node), s.config.Port))
 		if err != nil {
 			log.Printf("updateMemberList: rpc.DialHTTP failed")
@@ -293,13 +294,10 @@ func (s *SDFS) RPCDeleteFile(filename *string, ok *bool) error {
 
 // RPCPutFile RPC to add file
 func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithReplica) error {
-	filename, replicaList, err := s.index.AddFile(file.Filename, file.MD5)
-	if err != nil {
-		return err
-	}
+	version, replicaList := s.index.AddFile(file.Filename, file.MD5)
 
 	reply = &model.RPCFilenameWithReplica{
-		Filename:    filename,
+		Filename:    fmt.Sprintf("%s_%d", file.Filename, version),
 		ReplicaList: replicaList,
 	}
 	return nil
@@ -307,10 +305,7 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 
 // RPCGetFile RPC to get file
 func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica) error {
-	version, replicaList, err := s.index.GetFile(*filename)
-	if err != nil {
-		return err
-	}
+	version, replicaList := s.index.GetFile(*filename)
 
 	reply = &model.RPCFilenameWithReplica{
 		Filename:    fmt.Sprintf("%s_%d", *filename, version),
@@ -321,16 +316,13 @@ func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica)
 
 // RPCGetLatestVersions RPC to get latest versions of file
 func (s *SDFS) RPCGetLatestVersions(args *model.RPCGetLatestVersionsArgs, reply []*model.RPCGetLatestVersionsReply) error {
-	fileList, err := s.index.GetLatestVersions(args.Filename, args.Versions)
-	if err != nil {
-		return err
-	}
+	fileList := s.index.GetVersions(args.Filename, args.Versions)
 
 	reply = []*model.RPCGetLatestVersionsReply{}
 	for _, file := range fileList {
 		reply = append(reply, &model.RPCGetLatestVersionsReply{
-			Filename:    file.Filename,
-			ReplicaList: file.ReplicaList,
+			Filename:    args.Filename,
+			ReplicaList: file.Nodes,
 		})
 	}
 	return nil
@@ -355,8 +347,9 @@ func (s *SDFS) RPCPullIndex(nodeID *string, index *model.GlobalIndexFile) error 
 
 //RPCPushIndex RPC
 func (s *SDFS) RPCPushIndex(globalIndex *model.GlobalIndexFile, ok *bool) error {
-	s.index = SDFSIndex.LoadFromIndex(globalIndex)
+	s.index = SDFSIndex.LoadFromGlobalIndexFile(*globalIndex)
 	*ok = true
+	return nil
 }
 
 // RPCPullFile RPC
@@ -384,7 +377,7 @@ func (s *SDFS) RPCPullFileFrom(args *model.RPCPullFileFromArgs, ok *bool) error 
 		}(nodeID)
 	}
 
-	fileContent := nil
+	var fileContent []byte
 	i := len(args.PullList) - 1
 	// get first response
 	for fileContent == nil && i >= 0 {
@@ -393,10 +386,10 @@ func (s *SDFS) RPCPullFileFrom(args *model.RPCPullFileFromArgs, ok *bool) error 
 
 	if fileContent == nil {
 		*ok = false
-		return err
+		return fmt.Errorf("RPCPullFileFrom: pull file failed")
 	}
 
-	err = s.writeFile(args.Filename, fileContent)
+	err := s.writeFile(args.Filename, fileContent)
 	if err != nil {
 		*ok = false
 		return err
@@ -412,7 +405,7 @@ func (s *SDFS) pushFileToNode(filename string, nodeID string) error {
 		return err
 	}
 
-	fileContent, err := c.readFileContent(filename)
+	fileContent, err := s.readFileContent(filename)
 	if err != nil {
 		return err
 	}
@@ -448,7 +441,7 @@ func (s *SDFS) pullFileFromNode(filename string, nodeID string) []byte {
 		return nil
 	}
 
-	return reply.FileContent
+	return file.FileContent
 }
 
 func (s *SDFS) askNodeToPullFileFromNode(filename string, nodeID string, pullNodeList []string) error {
@@ -459,7 +452,7 @@ func (s *SDFS) askNodeToPullFileFromNode(filename string, nodeID string, pullNod
 
 	args := &model.RPCPullFileFromArgs{
 		Filename: filename,
-		NodeID:   targetNodeID,
+		PullList: pullNodeList,
 	}
 
 	var ok bool
@@ -469,7 +462,7 @@ func (s *SDFS) askNodeToPullFileFromNode(filename string, nodeID string, pullNod
 	}
 
 	if !ok {
-		return fmt.Errorf("ask %v to pull file(%v) from %v failed", nodeID, filename, targetNodeID)
+		return fmt.Errorf("ask %v to pull file(%v) from %v failed", nodeID, filename, pullNodeList)
 	}
 
 	return nil
