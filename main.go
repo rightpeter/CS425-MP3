@@ -29,7 +29,7 @@ func main() {
 	// Class for server
 	s := sdfs.NewSDFS(configFile, fdConfigFile)
 
-	f, err := os.OpenFile(s.GetConfigPath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(s.GetLogPath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
@@ -37,5 +37,13 @@ func main() {
 
 	log.SetOutput(f)
 
-	s.StartFailureDetector()
+	go s.StartFailureDetector()
+	err = s.InitIndex()
+	if err != nil {
+		log.Printf("main: Index init failed")
+	}
+
+	for {
+
+	}
 }
