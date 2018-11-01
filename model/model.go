@@ -1,18 +1,36 @@
 package model
 
-// RPCPushFileArgs for push file
-type RPCPushFileArgs struct {
+// SIZE md5 size
+const SIZE = 16
+
+// RPCFile file structure for rpc
+type RPCFile struct {
 	Filename    string
 	FileContent []byte
 }
 
-type RPCPushFileResult struct {
-	Reply string
+// RPCAddFileArgs args
+type RPCAddFileArgs struct {
+	Filename string
+	MD5      [SIZE]byte
 }
 
-// RPCArgs Input Arguments for rpc
-type RPCArgs struct {
-	Commands []string
+// RPCFilenameWithReplica reply
+type RPCFilenameWithReplica struct {
+	Filename    string
+	ReplicaList []string
+}
+
+// RPCGetLatestVersionsArgs args
+type RPCGetLatestVersionsArgs struct {
+	Filename string
+	Versions int
+}
+
+// RPCGetLatestVersionsReply reply
+type RPCGetLatestVersionsReply struct {
+	Filename    string
+	ReplicaList []string
 }
 
 // RPCResult Result for rpc
@@ -23,18 +41,20 @@ type RPCResult struct {
 	Error    error
 }
 
-// NodeConfig Structure of node config
-type NodeConfig struct {
-	ID      int    `json:"id"`
-	IP      string `json:"ip"`
-	Port    int    `json:"port"`
-	LogPath string `json:"log_path"`
+// RPCPullFileFromArgs rpc pullfilefrom args
+type RPCPullFileFromArgs struct {
+	Filename string
+	PullList []string
 }
 
-// NodesConfig structure to unmarshal json config file {id: int, ip: string, port: int}
-type NodesConfig struct {
-	Current NodeConfig   `json:"current"`
-	Nodes   []NodeConfig `json:"nodes"`
+// NodeConfig Structure of node config
+type NodeConfig struct {
+	IP              string `json:"ip"`
+	Port            int    `json:"port"`
+	LogPath         string `json:"log_path"`
+	FilePath        string `json:"file_path"`
+	SleepTime       int    `json:"sleep_time"`        // Millisecond
+	PullFileTimeout int    `json:"pull_file_timeout"` // Millisecond
 }
 
 // GlobalIndexFile contain maps which will give node->file and file->node mappings

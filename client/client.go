@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -39,7 +40,7 @@ func (c *Client) writeFile(filename string, fileContent []byte) error {
 
 func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (string, error) {
 	fmt.Println("filename: ", filename)
-	var reply string
+	var reply bool
 	err := client.Call("Server.DeleteFile", &filename, &reply)
 	if err != nil {
 		fmt.Println(err)
@@ -120,9 +121,12 @@ func (c *Client) deleteFile(filename string) error {
 		log.Fatal("dialing:", err)
 	}
 
-	_, err = c.callDeleteFileRPC(client, filename)
+	ok, err = c.callDeleteFileRPC(client, filename)
 	if err != nil {
 		return err
+	}
+	if !ok {
+		return errors.New("delete file failed")
 	}
 	return nil
 }

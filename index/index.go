@@ -1,4 +1,4 @@
-package main
+package index
 
 import "CS425/CS425-MP3/model"
 
