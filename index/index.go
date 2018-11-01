@@ -74,8 +74,6 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 	filesOnNode := i.index.NodesToFile[id]
 	delete(i.index.NodesToFile, id)
 
-	// get fv from Fileversions and remove id in all the versions
-
 	for _, file := range filesOnNode {
 		ind := i.findIndex(i.index.FileToNodes[file.Filename], id)
 		for _, fv := range i.index.Fileversions[file.Filename] {
@@ -110,8 +108,7 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 				// update FileToNodes
 				i.index.FileToNodes[file.Filename] = append(i.index.FileToNodes[file.Filename], node)
 
-				//TODO update the Nodes in Fileversions
-
+				//update Fileversions
 				latestFV := i.getLatestFileVersion(file.Filename)
 				latestFV.Nodes = append(latestFV.Nodes, node)
 
@@ -121,14 +118,6 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 	}
 
 	return instructions
-
-	// Will also need to rereplicate and send new list of nodes with
-
-	// get list of nodes sorted by num of files on them
-	// for files on removed node:
-	// if node does not comtain file, give it an instruction to go pull file from a node with that file
-	// Will also need to change Nodes to File and FileToNodes accordingly
-	return nil
 }
 
 func (i *Index) removeFromSlice(ind int, slice []string) []string {
