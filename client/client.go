@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/md5"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -64,6 +65,39 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 	return reply, nil
 }
 
+func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCFilenameWithReplica, error) {
+	var reply model.RPCFilenameWithReplica
+	fileContent, err := c.readFileContent(filename)
+	if err != nil {
+		return model.RPCFilenameWithReplica{}, err
+	}
+	file := model.RPCAddFileArgs{
+		Filename: filename,
+		MD5:      md5.Sum(fileContent),
+	}
+	err = client.Call("SDFS.RPCPutFile", &file, &reply)
+	if err != nil {
+		fmt.Println(err)
+		return model.RPCFilenameWithReplica{}, err
+	}
+	return reply, nil
+}
+
+func (c *Client) putFile(filename string) {
+	fmt.Println("getFile: ", filename)
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	fmt.Println("Connection made")
+
+	reply, err := c.callPutFileRPC(client, filename)
+	if err != nil {
+		return
+	}
+	log.Printf("%s is on %v", filename, reply.ReplicaList)
+}
+
 func (c *Client) getFile(filename string) {
 	fmt.Println("getFile: ", filename)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
@@ -110,10 +144,16 @@ func main() {
 	c := &Client{}
 	c.loadConfigFromJSON(configFile)
 
-	filename := flag.String("get", "", "get {filename}")
+	getFilename := flag.String("get", "", "get {filename}")
+
+	putFilename := flag.String("put", "", "put {filename}")
 
 	flag.Parse()
 
-	c.getFile(*filename)
+	if *getFilename != "" {
+		c.getFile(*getFilename)
+	} else if *putFilename != "" {
+		c.putFile(*putFilename)
+	}
 
 }
