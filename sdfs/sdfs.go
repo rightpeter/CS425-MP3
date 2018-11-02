@@ -292,18 +292,24 @@ func (s *SDFS) RPCDeleteFile(filename *string, ok *bool) error {
 
 // RPCPutFile RPC to add file
 func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithReplica) error {
-	version, replicaList := s.index.AddFile(file.Filename, file.MD5)
+	if s.isMaster() {
+		version, replicaList := s.index.AddFile(file.Filename, file.MD5)
 
-	reply = &model.RPCFilenameWithReplica{
-		Filename:    fmt.Sprintf("%s_%d", file.Filename, version),
-		ReplicaList: replicaList,
+		reply = &model.RPCFilenameWithReplica{
+			Filename:    fmt.Sprintf("%s_%d", file.Filename, version),
+			ReplicaList: replicaList,
+		}
+	} else {
+		err := s.putFile(file, reply)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // RPCGetFile RPC to get file
 func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica) error {
-	log.Println("RPCGetFile: In")
 	version, replicaList := s.index.GetFile(*filename)
 
 	reply = &model.RPCFilenameWithReplica{
@@ -399,6 +405,20 @@ func (s *SDFS) RPCPullFileFrom(args *model.RPCPullFileFromArgs, ok *bool) error 
 	return nil
 }
 
+func (s *SDFS) putFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithReplica) error {
+	client, err := s.getRPCClient(s.master)
+	if err != nil {
+		return err
+	}
+
+	var fileWithReplica model.RPCFilenameWithReplica
+	err = client.Call("SDFS.RPCGetFile", file, fileWithReplica)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *SDFS) pushFileToNode(filename string, nodeID string) error {
 	client, err := s.getRPCClient(nodeID)
 	if err != nil {
@@ -410,13 +430,13 @@ func (s *SDFS) pushFileToNode(filename string, nodeID string) error {
 		return err
 	}
 
-	args := &model.RPCFile{
+	args := model.RPCFile{
 		Filename:    filename,
 		FileContent: fileContent,
 	}
 
 	var ok bool
-	err = client.Call("SDFS.RPCPushFile", args, &ok)
+	err = client.Call("SDFS.RPCPushFile", &args, &ok)
 	if err != nil {
 		return err
 	}
@@ -531,5 +551,4 @@ func main() {
 
 	log.Printf("Start listen rpc on port: %d", s.getPort())
 	http.Serve(l, nil)
-
 }
