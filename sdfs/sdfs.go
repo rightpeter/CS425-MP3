@@ -302,6 +302,7 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 
 // RPCGetFile RPC to get file
 func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica) error {
+	log.Println("RPCGetFile: In")
 	version, replicaList := s.index.GetFile(*filename)
 
 	reply = &model.RPCFilenameWithReplica{
@@ -312,16 +313,17 @@ func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica)
 }
 
 // RPCGetLatestVersions RPC to get latest versions of file
-func (s *SDFS) RPCGetLatestVersions(args *model.RPCGetLatestVersionsArgs, reply []*model.RPCGetLatestVersionsReply) error {
+func (s *SDFS) RPCGetLatestVersions(args *model.RPCGetLatestVersionsArgs, reply *[]model.RPCGetLatestVersionsReply) error {
 	fileList := s.index.GetVersions(args.Filename, args.Versions)
 
-	reply = []*model.RPCGetLatestVersionsReply{}
+	tmpReply := []model.RPCGetLatestVersionsReply{}
 	for _, file := range fileList {
-		reply = append(reply, &model.RPCGetLatestVersionsReply{
+		tmpReply = append(tmpReply, model.RPCGetLatestVersionsReply{
 			Filename:    args.Filename,
 			ReplicaList: file.Nodes,
 		})
 	}
+	*reply = tmpReply
 	return nil
 }
 
