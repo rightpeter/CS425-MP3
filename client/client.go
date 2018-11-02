@@ -84,7 +84,7 @@ func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCF
 }
 
 func (c *Client) putFile(filename string) {
-	fmt.Println("getFile: ", filename)
+	fmt.Println("putFile: ", filename)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
