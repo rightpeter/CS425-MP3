@@ -113,6 +113,19 @@ func (s *SDFS) pushIndex(nodeID string) error {
 	return nil
 }
 
+func (s *SDFS) pushIndexToAll() []string {
+	failList := []string{}
+	for _, node := range s.sortedMemList {
+		if node != s.id {
+			err := s.pushIndex(node)
+			if err != nil {
+				failList = append(failList, node)
+			}
+		}
+	}
+	return failList
+}
+
 func (s *SDFS) getIP() string {
 	return s.config.IP
 }
@@ -225,6 +238,7 @@ func (s *SDFS) keepUpdatingMemberList() {
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
+			s.pushIndexToAll()
 		}
 	}
 }
@@ -295,6 +309,10 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 	if s.isMaster() {
 		version, replicaList := s.index.AddFile(file.Filename, file.MD5)
 
+		failList := s.pushIndexToAll()
+		if len(failList) > 0 {
+			log.Printf("Push Index to nodes: %v failed", failList)
+		}
 		reply = &model.RPCFilenameWithReplica{
 			Filename:    fmt.Sprintf("%s_%d", file.Filename, version),
 			ReplicaList: replicaList,
@@ -411,8 +429,7 @@ func (s *SDFS) putFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithR
 		return err
 	}
 
-	var fileWithReplica model.RPCFilenameWithReplica
-	err = client.Call("SDFS.RPCGetFile", file, fileWithReplica)
+	err = client.Call("SDFS.RPCPutFile", file, reply)
 	if err != nil {
 		return err
 	}
