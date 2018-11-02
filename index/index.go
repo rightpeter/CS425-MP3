@@ -23,14 +23,14 @@ type Index struct {
 }
 
 // NewIndex creates a new index object
-func NewIndex() *Index {
+func NewIndex() Index {
 	var i Index
 	i.index.Filename = make(map[string]model.FileStructure)
 	i.index.Fileversions = make(map[string][]model.FileVersion)
 	i.index.NodesToFile = make(map[string][]model.FileStructure)
 	i.index.FileToNodes = make(map[string][]string)
 	i.numFiles = make(map[string]int)
-	return &i
+	return i
 }
 
 // LoadFromGlobalIndexFile crLoadFromGlobalIndexFile

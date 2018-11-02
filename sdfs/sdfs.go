@@ -1,13 +1,15 @@
 // Package sdfs package for simple distributed file system
-package sdfs
+package main
 
 // refer to https://varshneyabhi.wordpress.com/2014/12/23/simple-udp-clientserver-in-golang/
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/rpc"
 	"os"
 	"strings"
@@ -54,13 +56,16 @@ func (s *SDFS) reElect() error {
 	return nil
 }
 
-// InitIndex init the index
-func (s *SDFS) InitIndex() error {
+func (s *SDFS) initIndex() error {
 	s.sortedMemList = s.failureDetector.GetMemberList()
-	if s.isMaster() && len(s.sortedMemList) > 1 {
-		err := s.pullIndex(s.sortedMemList[1])
-		if err != nil {
-			return err
+	if s.isMaster() {
+		if len(s.sortedMemList) > 1 {
+			err := s.pullIndex(s.sortedMemList[1])
+			if err != nil {
+				return err
+			}
+		} else {
+			s.index = SDFSIndex.NewIndex()
 		}
 	} else {
 		err := s.pullIndex(s.master)
@@ -71,8 +76,7 @@ func (s *SDFS) InitIndex() error {
 	return nil
 }
 
-// GetLogPath export config file path
-func (s *SDFS) GetLogPath() string {
+func (s *SDFS) getLogPath() string {
 	return s.config.LogPath
 }
 
@@ -107,18 +111,15 @@ func (s *SDFS) pushIndex(nodeID string) error {
 	return nil
 }
 
-// GetIP getip for server
-func (s *SDFS) GetIP() string {
+func (s *SDFS) getIP() string {
 	return s.config.IP
 }
 
-// SetIP setip for SDFS
-func (s *SDFS) SetIP(IP string) {
+func (s *SDFS) setIP(IP string) {
 	s.config.IP = IP
 }
 
-// GetPort getport of SDFS
-func (s *SDFS) GetPort() int {
+func (s *SDFS) getPort() int {
 	return s.config.Port
 }
 
@@ -160,7 +161,7 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 			i++
 			j++
 		}
-		if s.sortedMemList[i] > newMemList[j] {
+		if i < len(s.sortedMemList) && j < len(newMemList) && s.sortedMemList[i] > newMemList[j] {
 			newNodeList = append(newNodeList, newMemList[j])
 			j++
 		}
@@ -215,8 +216,7 @@ func (s *SDFS) updateFailNodes(failNodes []string) []string {
 	return failFailNodes
 }
 
-//UpdateMemberList updatememberlist loop
-func (s *SDFS) UpdateMemberList() {
+func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
 		failNodes, newNodes := s.updateMemberList()
@@ -227,19 +227,15 @@ func (s *SDFS) UpdateMemberList() {
 	}
 }
 
-// GetMemberList return sortedMemList
-func (s *SDFS) GetMemberList() []string {
-	s.updateMemberList()
+func (s *SDFS) getMemberList() []string {
 	return s.sortedMemList
 }
 
-// SetPort setport for SDFS
-func (s *SDFS) SetPort(port int) {
+func (s *SDFS) setPort(port int) {
 	s.config.Port = port
 }
 
-// StartFailureDetector StartFailureDetector
-func (s *SDFS) StartFailureDetector() {
+func (s *SDFS) startFailureDetector() {
 	for {
 		err := s.failureDetector.JoinToGroup()
 		if err != nil {
@@ -483,4 +479,53 @@ func (s *SDFS) deleteFileOnNode(filename string, nodeID string) error {
 		return fmt.Errorf("delete file on %s failed", nodeID)
 	}
 	return nil
+}
+
+// This function will register and initiate server
+func main() {
+	// parse argument
+	configFilePath := flag.String("c", "./config.json", "Config file path")
+	fdConfigFilePath := flag.String("fdc", "./failure_detector.config.json", "Failure Detector Config file path")
+
+	// load config file
+	configFile, err := ioutil.ReadFile(*configFilePath)
+	if err != nil {
+		log.Fatalf("File error: %v\n", err)
+	}
+
+	// load fd config file
+	fdConfigFile, err := ioutil.ReadFile(*fdConfigFilePath)
+	if err != nil {
+		log.Fatalf("File error: %v\n", err)
+	}
+
+	// Class for server
+	s := NewSDFS(configFile, fdConfigFile)
+
+	f, err := os.OpenFile(s.getLogPath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+
+	log.SetOutput(f)
+
+	go s.startFailureDetector()
+	go s.keepUpdatingMemberList()
+	err = s.initIndex()
+	if err != nil {
+		log.Printf("main: Index init failed")
+	}
+
+	// init the rpc server
+	newServer := rpc.NewServer()
+	newServer.Register(s)
+
+	l, e := net.Listen("tcp", fmt.Sprintf(":%d", s.getPort()))
+	if e != nil {
+		log.Fatal("listen error: ", e)
+	}
+
+	// server start
+	newServer.Accept(l)
 }
