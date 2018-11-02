@@ -235,9 +235,11 @@ func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
 		failNodes, newNodes := s.updateMemberList()
+		log.Printf("keepUpdatingMemberList: memberList: %v", s.sortedMemList)
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
+			log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
 			s.pushIndexToAll()
 		}
 	}
@@ -334,6 +336,14 @@ func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica)
 		Filename:    fmt.Sprintf("%s_%d", *filename, version),
 		ReplicaList: replicaList,
 	}
+	return nil
+}
+
+// RPCLs RPC to get file
+func (s *SDFS) RPCLs(filename *string, reply *[]string) error {
+	_, replicaList := s.index.GetFile(*filename)
+
+	*reply = replicaList
 	return nil
 }
 
