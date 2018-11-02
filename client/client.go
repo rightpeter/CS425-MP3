@@ -65,6 +65,17 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 	return reply, nil
 }
 
+func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (bool, error) {
+	// fmt.Println("filename: ", filename)
+	var reply bool
+	err := client.Call("SDFS.RPCDeleteFile", &filename, &reply)
+	if err != nil {
+		fmt.Println(err)
+		return false, err
+	}
+	return reply, nil
+}
+
 func (c *Client) pushFileToNode(filename string, filenameVersion string, nodeID string) error {
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nodeID), c.config.Port))
 	if err != nil {
@@ -167,6 +178,61 @@ func (c *Client) getFile(filename string) {
 		// TODO: could possible save in cache
 		fmt.Printf("Content:\n%s\n", file.FileContent)
 		break
+	}
+}
+
+// func (c *Client) putFile(filename string) {
+// 	fmt.Println("putFile: ", filename)
+// 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+// 	if err != nil {
+// 		log.Fatal("dialing:", err)
+// 	}
+// 	fmt.Println("Connection made")
+
+// 	reply, err := c.callPutFileRPC(client, filename)
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	log.Printf("%s is on %v", filename, reply.ReplicaList)
+// }
+
+func (c *Client) deleteFile(filename string) {
+	fmt.Println("deleteFile: ", filename)
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	reply, err := c.callGetFileRPC(client, filename)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("deleteFile: Files with %s: %v \n", filename, reply.ReplicaList)
+
+	if len(reply.ReplicaList) == 0 {
+		log.Println("File not available")
+		return
+	}
+
+	log.Printf("Nodes with FileName: %v \n", reply.ReplicaList)
+
+	for _, id := range reply.ReplicaList {
+		cl, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(id), c.config.Port))
+		if err != nil {
+			log.Fatal("dialing:", err)
+		}
+		// TODO: Could possible use a goroutine
+		del, err := c.callDeleteFileRPC(cl, reply.Filename)
+		if err != nil {
+			return
+		}
+		if del {
+			fmt.Printf("Deleted: %s\n", reply.Filename)
+		} else {
+			fmt.Printf("Failed to delete: %s\n", reply.Filename)
+		}
+
 	}
 
 }
