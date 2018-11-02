@@ -49,6 +49,7 @@ func (s *SDFS) init(sdfsConfig []byte, failureDetectorConfig []byte) {
 	s.filePath = s.config.FilePath
 	s.id = s.failureDetector.GetID()
 	s.master = s.id
+	s.nodesRPCClients = map[string]*rpc.Client{}
 }
 
 func (s *SDFS) reElect() error {

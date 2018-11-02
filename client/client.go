@@ -137,7 +137,7 @@ func (c *Client) getIPFromID(nodeID string) string {
 func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCFilenameWithReplica, error) {
 	fmt.Println("filename: ", filename)
 	var reply model.RPCFilenameWithReplica
-	err := client.Call("Server.RPCGetFile", &filename, &reply)
+	err := client.Call("SDFS.RPCGetFile", &filename, &reply)
 	if err != nil {
 		fmt.Println(err)
 		return model.RPCFilenameWithReplica{}, err
@@ -148,7 +148,7 @@ func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCF
 func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPCFile, error) {
 	fmt.Println("filename: ", filename)
 	var reply model.RPCFile
-	err := client.Call("Server.RPCPullFile", &filename, &reply)
+	err := client.Call("SDFS.RPCPullFile", &filename, &reply)
 	if err != nil {
 		fmt.Println(err)
 		return model.RPCFile{}, err
