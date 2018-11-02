@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"net/rpc"
 	"os"
 	"strings"
@@ -521,14 +522,14 @@ func main() {
 	}
 
 	// init the rpc server
-	newServer := rpc.NewServer()
-	newServer.Register(s)
-
+	rpc.Register(s)
+	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", fmt.Sprintf(":%d", s.getPort()))
 	if e != nil {
 		log.Fatal("listen error: ", e)
 	}
 
-	// server start
-	newServer.Accept(l)
+	log.Printf("Start listen rpc on port: %d", s.getPort())
+	http.Serve(l, nil)
+
 }
