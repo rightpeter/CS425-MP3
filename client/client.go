@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -40,99 +41,6 @@ func (c *Client) writeFile(filename string, fileContent []byte) error {
 func (c *Client) getIPFromID(nodeID string) string {
 	return strings.Split(nodeID, "-")[0]
 }
-
-// func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (string, error) {
-// 	fmt.Println("filename: ", filename)
-// 	var reply bool
-// 	err := client.Call("Server.DeleteFile", &filename, &reply)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return "", err
-// 	}
-// 	return reply, nil
-// }
-
-// func (c *Client) callPushFileRPC(client *rpc.Client, filename string) (string, error) {
-// 	fmt.Println("filename: ", filename)
-// 	fileContent, err := c.readFileContent(filename)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	args := &model.RPCPushFileArgs{
-// 		Filename:    filename,
-// 		FileContent: fileContent,
-// 	}
-// 	var reply string
-// 	err = client.Call("Server.PushFile", args, &reply)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return "", err
-// 	}
-// 	return reply, nil
-// }
-
-// func (c *Client) callPullFileRPC(client *rpc.Client, filename string) error {
-// 	fmt.Println("filename: ", filename)
-// 	var reply model.RPCPushFileArgs
-// 	err := client.Call("Server.PullFile", &filename, &reply)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return err
-// 	}
-// 	err = c.writeFile(reply.Filename, reply.FileContent)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (c *Client) pushFile(filename string) model.RPCResult {
-// 	result := model.RPCResult{}
-// 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", 8080))
-// 	if err != nil {
-// 		log.Fatal("dialing:", err)
-// 	}
-
-// 	reply, err := c.callPushFileRPC(client, filename)
-// 	if err != nil {
-// 		result.Error = err
-// 		return result
-// 	}
-// 	result.Reply = reply
-// 	fmt.Println("reply: ", reply)
-// 	return result
-// }
-
-// func (c *Client) pullFile(filename string) model.RPCResult {
-// 	result := model.RPCResult{}
-// 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", 8080))
-// 	if err != nil {
-// 		log.Fatal("dialing:", err)
-// 	}
-
-// 	err = c.callPullFileRPC(client, filename)
-// 	if err != nil {
-// 		result.Error = err
-// 		return result
-// 	}
-// 	return result
-// }
-
-// func (c *Client) deleteFile(filename string) error {
-// 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", 8080))
-// 	if err != nil {
-// 		log.Fatal("dialing:", err)
-// 	}
-
-// 	ok, err = c.callDeleteFileRPC(client, filename)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if !ok {
-// 		return errors.New("delete file failed")
-// 	}
-// 	return nil
-// }
 
 func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCFilenameWithReplica, error) {
 	fmt.Println("filename: ", filename)
@@ -199,10 +107,13 @@ func main() {
 	if e != nil {
 		log.Fatalf("File error: %v\n", e)
 	}
-
 	c := &Client{}
 	c.loadConfigFromJSON(configFile)
 
-	c.getFile("f1")
+	filename := flag.String("get", "", "get {filename}")
+
+	flag.Parse()
+
+	c.getFile(*filename)
 
 }
