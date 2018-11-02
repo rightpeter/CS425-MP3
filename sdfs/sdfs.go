@@ -68,6 +68,7 @@ func (s *SDFS) initIndex() error {
 			}
 		} else {
 			s.index = SDFSIndex.NewIndex()
+			s.index.AddNewNode(s.id)
 		}
 	} else {
 		err := s.pullIndex(s.master)
@@ -232,10 +233,11 @@ func (s *SDFS) updateFailNodes(failNodes []string) []string {
 func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
-		failNodes, newNodes := s.updateMemberList()
+		newNodes, failNodes := s.updateMemberList()
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
+			log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
 			s.pushIndexToAll()
 		}
@@ -312,7 +314,7 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 		if len(failList) > 0 {
 			log.Printf("Push Index to nodes: %v failed", failList)
 		}
-		reply = &model.RPCFilenameWithReplica{
+		*reply = model.RPCFilenameWithReplica{
 			Filename:    fmt.Sprintf("%s_%d", file.Filename, version),
 			ReplicaList: replicaList,
 		}
@@ -329,7 +331,7 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 func (s *SDFS) RPCGetFile(filename *string, reply *model.RPCFilenameWithReplica) error {
 	version, replicaList := s.index.GetFile(*filename)
 
-	reply = &model.RPCFilenameWithReplica{
+	*reply = model.RPCFilenameWithReplica{
 		Filename:    fmt.Sprintf("%s_%d", *filename, version),
 		ReplicaList: replicaList,
 	}
