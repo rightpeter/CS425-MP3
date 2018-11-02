@@ -233,10 +233,11 @@ func (s *SDFS) updateFailNodes(failNodes []string) []string {
 func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
-		failNodes, newNodes := s.updateMemberList()
+		newNodes, failNodes := s.updateMemberList()
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
+			log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
 			s.pushIndexToAll()
 		}

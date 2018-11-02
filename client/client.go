@@ -24,7 +24,7 @@ func (c *Client) loadConfigFromJSON(jsonFile []byte) error {
 }
 
 func (c *Client) readFileContent(filename string) ([]byte, error) {
-	content, err := ioutil.ReadFile(filename)
+	content, err := ioutil.ReadFile("./files/" + filename)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (c *Client) getIPFromID(nodeID string) string {
 }
 
 func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCFilenameWithReplica, error) {
-	fmt.Println("filename: ", filename)
+	// fmt.Println("filename: ", filename)
 	var reply model.RPCFilenameWithReplica
 	err := client.Call("SDFS.RPCGetFile", &filename, &reply)
 	if err != nil {
@@ -55,7 +55,7 @@ func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCF
 }
 
 func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPCFile, error) {
-	fmt.Println("filename: ", filename)
+	// fmt.Println("filename: ", filename)
 	var reply model.RPCFile
 	err := client.Call("SDFS.RPCPullFile", &filename, &reply)
 	if err != nil {
@@ -63,6 +63,34 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 		return model.RPCFile{}, err
 	}
 	return reply, nil
+}
+
+func (c *Client) pushFileToNode(filename string, filenameVersion string, nodeID string) error {
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nodeID), c.config.Port))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+
+	fileContent, err := c.readFileContent(filename)
+	if err != nil {
+		return err
+	}
+
+	args := model.RPCFile{
+		Filename:    filenameVersion,
+		FileContent: fileContent,
+	}
+
+	var ok bool
+	err = client.Call("SDFS.RPCPushFile", &args, &ok)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return fmt.Errorf("push file to %s failed", nodeID)
+	}
+	return nil
 }
 
 func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCFilenameWithReplica, error) {
@@ -80,6 +108,11 @@ func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCF
 		fmt.Println(err)
 		return model.RPCFilenameWithReplica{}, err
 	}
+	fmt.Printf("Replica list: %v/n", reply.ReplicaList)
+	for _, nID := range reply.ReplicaList {
+		fmt.Printf("Pushing file %s to %v", reply.Filename, nID)
+		c.pushFileToNode(filename, reply.Filename, nID)
+	}
 	return reply, nil
 }
 
@@ -95,6 +128,7 @@ func (c *Client) putFile(filename string) {
 	if err != nil {
 		return
 	}
+
 	log.Printf("%s is on %v", filename, reply.ReplicaList)
 }
 
@@ -109,6 +143,7 @@ func (c *Client) getFile(filename string) {
 	if err != nil {
 		return
 	}
+	fmt.Printf("GETFILE: replicalist %v", reply.ReplicaList)
 
 	fmt.Printf("Files with %s: %v \n", filename, reply.ReplicaList)
 
@@ -125,12 +160,12 @@ func (c *Client) getFile(filename string) {
 			log.Fatal("dialing:", err)
 		}
 		// TODO: Could possible use a goroutine
-		file, err := c.callPullFileRPC(cl, filename)
+		file, err := c.callPullFileRPC(cl, reply.Filename)
 		if err != nil {
 			return
 		}
 		// TODO: could possible save in cache
-		log.Printf("%s\n", file.FileContent)
+		fmt.Printf("Content:\n%s\n", file.FileContent)
 		break
 	}
 
