@@ -318,6 +318,9 @@ func (i *Index) GetFile(filename string) (int, []string) {
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].Version > versions[j].Version
 	})
+	if len(versions) == 0 {
+		return -1, nil
+	}
 	return versions[0].Version, versions[0].Nodes
 }
 

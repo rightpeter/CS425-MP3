@@ -157,14 +157,18 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 }
 
 func (c *Client) getFile(filename string) {
+	fmt.Println("getFile: ", filename)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
+	fmt.Println("Connection made")
 	reply, err := c.callGetFileRPC(client, filename)
 	if err != nil {
 		return
 	}
+
+	fmt.Printf("Files with %s: %v \n", filename, reply.ReplicaList)
 
 	if len(reply.ReplicaList) == 0 {
 		log.Println("File not available")

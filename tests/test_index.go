@@ -60,5 +60,5 @@ func main() {
 	fmt.Println(i.GetVersions("f3", 5))
 	fmt.Println("----------")
 	fmt.Println("Getfile ")
-	fmt.Println(i.GetFile("f3"))
+	fmt.Println(i.GetFile("f7"))
 }
