@@ -235,7 +235,6 @@ func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
 		failNodes, newNodes := s.updateMemberList()
-		log.Printf("keepUpdatingMemberList: memberList: %v", s.sortedMemList)
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
