@@ -187,6 +187,7 @@ func (c *Client) putFile(filename string) {
 
 	reply, err := c.callPutFileRPC(client, filename)
 	if err != nil {
+		fmt.Printf("Time for -put: %v\n", time.Since(t0))
 		return
 	}
 
@@ -212,6 +213,7 @@ func (c *Client) getFile(filename string) {
 
 	if len(reply.ReplicaList) == 0 {
 		log.Println("File not available")
+		fmt.Printf("Time for -get: %v\n", time.Since(t0))
 		return
 	}
 
