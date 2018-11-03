@@ -307,7 +307,7 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) (int, []string) {
 }
 
 // RemoveFile add file to GlobalIndexFile
-func (i *Index) RemoveFile(filename string) {
+func (i *Index) RemoveFile(filename string) []string {
 	nodes := i.index.FileToNodes[filename]
 	for _, id := range nodes {
 		i.numFiles[id]--
@@ -321,6 +321,7 @@ func (i *Index) RemoveFile(filename string) {
 		i.index.NodesToFile[id] = newFiles
 		delete(i.index.FileToNodes, filename)
 	}
+	return nodes
 }
 
 func (i *Index) GetVersions(filename string, numVersions int) []model.FileVersion {
