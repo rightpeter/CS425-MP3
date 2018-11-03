@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/rpc"
+	"os"
+	"strconv"
 	"strings"
 
 	"CS425/CS425-MP3/model"
@@ -310,6 +312,7 @@ func main() {
 	deleteFilename := flag.String("del", "", "del {filename}")
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
+	getVersions := flag.String("get-versions", "", "getVersions {sdfsfilename} {num-versions} {localfilenam}")
 
 	flag.Parse()
 
@@ -323,6 +326,18 @@ func main() {
 		c.storesOnNode(*stores)
 	} else if *deleteFilename != "" {
 		c.deleteFile(*deleteFilename)
+	} else if *getVersions != "" {
+		args := os.Args[2:]
+		if len(args) < 3 {
+			fmt.Println("not enough args: getVersions {sdfsfilename} {num-versions} {localfilenam}")
+		} else {
+			versions, err := strconv.Atoi(args[1])
+			if err != nil {
+				fmt.Printf("num-versions should be a number!")
+			}
+			fmt.Printf("getVersions {%s} {%d} {%v}", args[0], versions, args[2])
+			c.getVersions(args[0], versions, args[2])
+		}
 	}
 
 }
