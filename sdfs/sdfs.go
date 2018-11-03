@@ -329,7 +329,7 @@ func (s *SDFS) startFailureDetector() {
 
 	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
 	go s.failureDetector.ServerLoop()
-	s.failureDetector.FailureDetection()
+	go s.failureDetector.FailureDetection()
 	fmt.Printf("failureDetector has been killed!")
 }
 
@@ -703,8 +703,23 @@ func main() {
 
 	log.SetOutput(f)
 
-	go s.startFailureDetector()
+	for {
+		err := s.failureDetector.JoinToGroup()
+		if err != nil {
+			log.Printf("join to group failed: %s\n", err.Error())
+			log.Printf("try to join to group 5 seconds later...")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		log.Printf("join to group successfully\n\n")
+		break
+	}
+
+	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
+	go s.failureDetector.ServerLoop()
+	go s.failureDetector.FailureDetection()
 	go s.keepUpdatingMemberList()
+
 	err = s.initIndex()
 	if err != nil {
 		log.Printf("main: Index init failed")
