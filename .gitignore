@@ -6,3 +6,4 @@ failure_detector.config.json
 main
 
 tmp/
+files/

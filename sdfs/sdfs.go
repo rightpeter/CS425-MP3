@@ -237,8 +237,9 @@ func (s *SDFS) keepUpdatingMemberList() {
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
-			log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
-			log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
+			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
+			//log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
+			log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
 			s.pushIndexToAll()
 		}
 	}
@@ -363,6 +364,7 @@ func (s *SDFS) RPCGetLatestVersions(args *model.RPCGetLatestVersionsArgs, reply 
 
 // RPCPushFile RPC
 func (s *SDFS) RPCPushFile(file *model.RPCFile, ok *bool) error {
+	log.Printf("RPCPushFile: write file: %s", file.Filename)
 	err := s.writeFile(file.Filename, file.FileContent)
 	if err != nil {
 		*ok = false
@@ -442,6 +444,18 @@ func (s *SDFS) putFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithR
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// RPCLsReplicasOfFile RPC
+func (s *SDFS) RPCLsReplicasOfFile(filename *string, replicaList *[]string) error {
+	*replicaList = s.index.LsReplicasOfFile(*filename)
+	return nil
+}
+
+// RPCStoresOnNode RPC
+func (s *SDFS) RPCStoresOnNode(nodeID *string, files *[]string) error {
+	*files = s.index.StoresOnNode(*nodeID)
 	return nil
 }
 

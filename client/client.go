@@ -77,11 +77,13 @@ func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (bool, e
 }
 
 func (c *Client) pushFileToNode(filename string, filenameVersion string, nodeID string) error {
+	fmt.Printf("pushFileToNode: DialHTTP: ip: %s, port: %d", c.getIPFromID(nodeID), c.config.Port)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nodeID), c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 
+	fmt.Printf("pushFileToNode: readFileContent: %v", filename)
 	fileContent, err := c.readFileContent(filename)
 	if err != nil {
 		return err
@@ -93,6 +95,7 @@ func (c *Client) pushFileToNode(filename string, filenameVersion string, nodeID 
 	}
 
 	var ok bool
+	fmt.Printf("pushFileToNode: calling SDFS.RPCPushFile")
 	err = client.Call("SDFS.RPCPushFile", &args, &ok)
 	if err != nil {
 		return err
@@ -119,12 +122,32 @@ func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCF
 		fmt.Println(err)
 		return model.RPCFilenameWithReplica{}, err
 	}
-	fmt.Printf("Replica list: %v/n", reply.ReplicaList)
+	fmt.Printf("Replica list: %v\n", reply.ReplicaList)
 	for _, nID := range reply.ReplicaList {
 		fmt.Printf("Pushing file %s to %v", reply.Filename, nID)
 		c.pushFileToNode(filename, reply.Filename, nID)
 	}
 	return reply, nil
+}
+
+func (c *Client) callLsRPC(client *rpc.Client, filename string) ([]string, error) {
+	replicaList := []string{}
+	err := client.Call("SDFS.RPCLsReplicasOfFile", &filename, &replicaList)
+	if err != nil {
+		return nil, err
+	}
+
+	return replicaList, nil
+}
+
+func (c *Client) callStoresRPC(client *rpc.Client, nodeID string) ([]string, error) {
+	fileList := []string{}
+	err := client.Call("SDFS.RPCStoresOnNode", &nodeID, &fileList)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileList, nil
 }
 
 func (c *Client) putFile(filename string) {
@@ -235,6 +258,45 @@ func (c *Client) deleteFile(filename string) {
 	}
 }
 
+func (c *Client) lsReplicasOfFile(filename string) {
+	fmt.Printf("lsReplicasOfFile: filename: %s", filename)
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		fmt.Printf("dialing: %s", err)
+	}
+	// reply: [nodeID1, nodeID2, ...]
+	replicaList, err := c.callLsRPC(client, filename)
+	if err != nil {
+		fmt.Printf("lsReplicasOfFile: callLsRPC failed, err: %v", err)
+	}
+
+	fmt.Printf("File %s is replicated on nodes: ", filename)
+	for _, nodeID := range replicaList {
+		fmt.Printf("\t%s", nodeID)
+	}
+	fmt.Println("")
+}
+
+func (c *Client) storesOnNode(nodeID string) {
+	fmt.Printf("storesOnNode: nodeID: %s", nodeID)
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		fmt.Printf("dialing: %s", err)
+	}
+
+	// reply: [file1, file2, ...]
+	fileList, err := c.callStoresRPC(client, nodeID)
+	if err != nil {
+		fmt.Printf("storesOnNode: callStoresRPC failed, err: %v", err)
+	}
+
+	fmt.Printf("Stores of node %s are: ", nodeID)
+	for _, filename := range fileList {
+		fmt.Printf("\t%s", filename)
+	}
+	fmt.Println("")
+}
+
 func main() {
 	configFile, e := ioutil.ReadFile("./config.json")
 	if e != nil {
@@ -243,9 +305,11 @@ func main() {
 	c := &Client{}
 	c.loadConfigFromJSON(configFile)
 
-	getFilename := flag.String("get", "", "-get {filename}")
-	putFilename := flag.String("put", "", "-put {filename}")
+	getFilename := flag.String("get", "", "get {filename}")
+	putFilename := flag.String("put", "", "put {filename}")
 	deleteFilename := flag.String("delete", "", "-del {filename}")
+	ls := flag.String("ls", "", "ls {filename}")
+	stores := flag.String("stores", "", "stores {nodeID}")
 
 	flag.Parse()
 
@@ -253,6 +317,10 @@ func main() {
 		c.getFile(*getFilename)
 	} else if *putFilename != "" {
 		c.putFile(*putFilename)
+	} else if *ls != "" {
+		c.lsReplicasOfFile(*ls)
+	} else if *stores != "" {
+		c.storesOnNode(*stores)
 	} else if *deleteFilename != "" {
 		c.deleteFile(*deleteFilename)
 	}

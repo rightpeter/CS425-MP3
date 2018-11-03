@@ -52,6 +52,20 @@ func (i *Index) AddNewNode(id string) {
 	i.numFiles[id] = 0
 }
 
+// LsReplicasOfFile ls replicas of file
+func (i *Index) LsReplicasOfFile(filename string) []string {
+	return i.index.FileToNodes[filename]
+}
+
+// StoresOnNode return files stored on node
+func (i *Index) StoresOnNode(nodeID string) []string {
+	files := []string{}
+	for _, file := range i.index.NodesToFile[nodeID] {
+		files = append(files, file.Filename)
+	}
+	return files
+}
+
 func (i *Index) getLatestVersion(filename string) int {
 	return i.index.Filename[filename].Version
 }
