@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"CS425/CS425-MP3/model"
 
@@ -176,6 +177,7 @@ func (c *Client) callStoresRPC(client *rpc.Client, nodeID string) ([]string, err
 }
 
 func (c *Client) putFile(filename string) {
+	t0 := time.Now()
 	fmt.Println("putFile: ", filename)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
@@ -189,10 +191,12 @@ func (c *Client) putFile(filename string) {
 	}
 
 	log.Printf("%s is on %v\n", filename, reply.ReplicaList)
+	fmt.Printf("Time for -put: %v\n", time.Since(t0))
 }
 
 func (c *Client) getFile(filename string) {
 	fmt.Println("getFile: ", filename)
+	t0 := time.Now()
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
@@ -227,6 +231,7 @@ func (c *Client) getFile(filename string) {
 		fmt.Printf("Content:\n%s\n", file.FileContent)
 		break
 	}
+	fmt.Printf("Time for -get: %v\n", time.Since(t0))
 }
 
 func (c *Client) getFileFromNode(filename string, nodeID string) []byte {
@@ -242,6 +247,7 @@ func (c *Client) getFileFromNode(filename string, nodeID string) []byte {
 }
 
 func (c *Client) deleteFile(filename string) {
+	t0 := time.Now()
 	fmt.Println("deleteFile: ", filename)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
@@ -277,6 +283,7 @@ func (c *Client) deleteFile(filename string) {
 			fmt.Printf("Failed to delete: %s\n", filename)
 		}
 	}
+	fmt.Printf("Time for -del: %v\n", time.Since(t0))
 }
 
 func (c *Client) getVersionForFile(filename string, numVersions int, outFileName string) {
@@ -447,12 +454,14 @@ func main() {
 		if len(args) < 3 {
 			fmt.Println("not enough args: getVersions {sdfsfilename} {num-versions} {localfilenam}")
 		} else {
+			t0 := time.Now()
 			versions, err := strconv.Atoi(args[1])
 			if err != nil {
 				fmt.Printf("num-versions should be a number!")
 			}
 			fmt.Printf("getVersions {%s} {%d} {%v}", args[0], versions, args[2])
 			c.getVersionForFile(args[0], versions, args[2])
+			fmt.Printf("Time for -get-versions with numVersions %d : %v\n", versions, time.Since(t0))
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	"CS425/CS425-MP3/index"
 	"crypto/md5"
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -55,10 +56,13 @@ func main() {
 	println("Nodes with f3")
 	fmt.Println(i.GetNodesWithFile("f3"))
 
+	t0 := time.Now()
 	fmt.Println("----------")
 	fmt.Println("Get file versions")
 	fmt.Println(i.GetVersions("f3", 5))
 	fmt.Println("----------")
 	fmt.Println("Getfile ")
 	fmt.Println(i.GetFile("f7"))
+
+	fmt.Printf("Time: %v\n", time.Since(t0))
 }
