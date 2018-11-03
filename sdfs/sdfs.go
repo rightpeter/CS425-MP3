@@ -262,6 +262,7 @@ func (s *SDFS) updateNewNodes(newNodes []string) {
 }
 
 func (s *SDFS) updateFailNodes(failNodes []string) []string {
+	start := time.Now()
 	failFailNodes := []string{}
 	for _, node := range failNodes {
 		pullList := s.index.RemoveNode(node)
@@ -272,6 +273,9 @@ func (s *SDFS) updateFailNodes(failNodes []string) []string {
 				failFailNodes = append(failFailNodes, node)
 			}
 		}
+	}
+	if len(failNodes) > 0 {
+		fmt.Printf("Rereplication time for nodes %v:\n %v\n", failNodes, time.Since(start))
 	}
 	return failFailNodes
 }
@@ -289,13 +293,8 @@ func (s *SDFS) keepUpdatingMemberList() {
 		}
 
 		if s.isMaster() {
-			s.updateNewNodes(newNodes)
-
-			start := time.Now()
-			s.updateFailNodes(failNodes)
-			if len(failNodes) > 0 {
-				fmt.Printf("Rereplication time for nodes %v:\n %v\n", failNodes, time.Since(start))
-			}
+			go s.updateNewNodes(newNodes)
+			go s.updateFailNodes(failNodes)
 
 			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			//log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
