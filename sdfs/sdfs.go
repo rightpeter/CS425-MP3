@@ -341,9 +341,15 @@ func (s *SDFS) readFileContent(filename string) ([]byte, error) {
 }
 
 func (s *SDFS) deleteFile(filename string) error {
-	err := os.Remove(s.filePath + filename)
+	files, err := filepath.Glob(s.filePath + filename)
 	if err != nil {
 		return err
+	}
+
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return err
+		}
 	}
 	return nil
 }
