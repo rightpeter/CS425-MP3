@@ -270,7 +270,7 @@ func (c *Client) lsReplicasOfFile(filename string) {
 		fmt.Printf("lsReplicasOfFile: callLsRPC failed, err: %v", err)
 	}
 
-	fmt.Printf("File %s is replicated on nodes: ", filename)
+	fmt.Printf("File %s is replicated on nodes: \n", filename)
 	for _, nodeID := range replicaList {
 		fmt.Printf("\t%s", nodeID)
 	}
@@ -290,7 +290,7 @@ func (c *Client) storesOnNode(nodeID string) {
 		fmt.Printf("storesOnNode: callStoresRPC failed, err: %v", err)
 	}
 
-	fmt.Printf("Stores of node %s are: ", nodeID)
+	fmt.Printf("Stores of node %s are: \n", nodeID)
 	for _, filename := range fileList {
 		fmt.Printf("\t%s", filename)
 	}
@@ -307,7 +307,7 @@ func main() {
 
 	getFilename := flag.String("get", "", "get {filename}")
 	putFilename := flag.String("put", "", "put {filename}")
-	deleteFilename := flag.String("del", "", "-del {filename}")
+	deleteFilename := flag.String("del", "", "del {filename}")
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
 
