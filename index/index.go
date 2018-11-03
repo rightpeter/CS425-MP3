@@ -79,7 +79,13 @@ func (i *Index) LsReplicasOfFile(filename string) []string {
 // StoresOnNode return files stored on node
 func (i *Index) StoresOnNode(nodeID string) []string {
 	files := []string{}
+	table := make(map[string]int)
 	for _, file := range i.index.NodesToFile[nodeID] {
+		_, ok := table[file.Filename]
+		if ok {
+			continue
+		}
+		table[file.Filename] = 1
 		files = append(files, file.Filename)
 	}
 	return files
@@ -301,7 +307,7 @@ func (i *Index) updateFile(filename string, hash [SIZE]byte) (int, []string) {
 }
 
 // RemoveFile add file to GlobalIndexFile
-func (i *Index) RemoveFile(filename string) {
+func (i *Index) RemoveFile(filename string) []string {
 	nodes := i.index.FileToNodes[filename]
 	for _, id := range nodes {
 		i.numFiles[id]--
@@ -315,6 +321,7 @@ func (i *Index) RemoveFile(filename string) {
 		i.index.NodesToFile[id] = newFiles
 		delete(i.index.FileToNodes, filename)
 	}
+	return nodes
 }
 
 func (i *Index) GetVersions(filename string, numVersions int) []model.FileVersion {
