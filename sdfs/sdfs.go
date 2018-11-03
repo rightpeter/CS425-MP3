@@ -118,7 +118,6 @@ func (s *SDFS) pushIndex(nodeID string) error {
 func (s *SDFS) pushIndexToAll() []string {
 	failList := []string{}
 	for _, node := range s.sortedMemList {
-		fmt.Printf("start to push index to %s\n", node)
 		if node != s.id {
 			err := s.pushIndex(node)
 			if err != nil {
@@ -126,7 +125,6 @@ func (s *SDFS) pushIndexToAll() []string {
 				failList = append(failList, node)
 			}
 		}
-		fmt.Printf("Finish push index\n")
 	}
 	return failList
 }
