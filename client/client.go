@@ -232,9 +232,7 @@ func (c *Client) deleteFile(filename string) {
 		} else {
 			fmt.Printf("Failed to delete: %s\n", reply.Filename)
 		}
-
 	}
-
 }
 
 func main() {
@@ -245,9 +243,9 @@ func main() {
 	c := &Client{}
 	c.loadConfigFromJSON(configFile)
 
-	getFilename := flag.String("get", "", "get {filename}")
-
-	putFilename := flag.String("put", "", "put {filename}")
+	getFilename := flag.String("get", "", "-get {filename}")
+	putFilename := flag.String("put", "", "-put {filename}")
+	deleteFilename := flag.String("delete", "", "-del {filename}")
 
 	flag.Parse()
 
@@ -255,6 +253,8 @@ func main() {
 		c.getFile(*getFilename)
 	} else if *putFilename != "" {
 		c.putFile(*putFilename)
+	} else if *deleteFilename != "" {
+		c.deleteFile(*deleteFilename)
 	}
 
 }
