@@ -54,7 +54,7 @@ func (i *Index) AddNewNode(id string) {
 // PrintIndex PrintIndex
 func (i *Index) PrintIndex() string {
 	ret := ""
-	ret += "Nodes in system\n"
+	ret += "Nodes in system:\n"
 	for k := range i.numFiles {
 		ret += k + ", "
 	}
