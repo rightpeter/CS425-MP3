@@ -120,6 +120,7 @@ func (s *SDFS) pushIndexToAll() []string {
 		if node != s.id {
 			err := s.pushIndex(node)
 			if err != nil {
+				//log.Printf("pushIndexToAll: pushIndex err: %v", err)
 				failList = append(failList, node)
 			}
 		}
@@ -203,6 +204,7 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 
 func (s *SDFS) addRPCClientForNode(nodeID string) []string {
 	failNodes := []string{}
+	log.Printf("addRPCClientForNode: try to add rpc client to %s\n", nodeID)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", s.getIPFromID(nodeID), s.config.Port))
 	if err != nil {
 		log.Printf("updateMemberList: rpc.DialHTTP failed")
@@ -320,6 +322,12 @@ func (s *SDFS) RPCPrintMemberList(a *string, b *string) error {
 // RPCPrintIndex RPC
 func (s *SDFS) RPCPrintIndex(a *string, b *string) error {
 	fmt.Printf("Index: \n%v\n", s.index.PrintIndex())
+	return nil
+}
+
+// RPCPrintRPCClients RPC
+func (s *SDFS) RPCPrintRPCClients(a *string, b *string) error {
+	fmt.Printf("RPCClients: \n%v\n", s.nodesRPCClients)
 	return nil
 }
 
