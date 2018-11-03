@@ -289,16 +289,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 	// TODO: Could possible use a goroutine
 	for _, version := range reply {
 		for _, nID := range version.ReplicaList {
-			cl, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nID), c.config.Port))
-			if err != nil {
-				log.Fatal("dialing:", err)
-			}
-			versions, err := c.callGetVersionsRPC(cl, version.Filename, numVersions)
-			if err != nil {
-				return
-			}
 			content := c.getFileFromNode(version.Filename, nID)
-
 			fmt.Printf("filename: %s", version.Filename)
 			fmt.Printf("Content: %v", content)
 		}
@@ -358,7 +349,7 @@ func main() {
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
 	getVersions := flag.String("get-versions", "", "getVersions {sdfsfilename} {num-versions} {localfilenam}")
-	numVersions := flag.Int("numVersions", 0, "numVersion {number}")
+	// numVersions := flag.Int("numVersions", 0, "numVersion {number}")
 
 	flag.Parse()
 
