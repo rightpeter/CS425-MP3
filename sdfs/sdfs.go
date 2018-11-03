@@ -294,7 +294,7 @@ func (s *SDFS) keepUpdatingMemberList() {
 			start := time.Now()
 			s.updateFailNodes(failNodes)
 			if len(failNodes) > 0 {
-				fmt.Println(time.Since(start))
+				fmt.Printf("Rereplication time for nodes %v:\n %v\n", failNodes, time.Since(start))
 			}
 
 			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
