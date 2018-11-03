@@ -7,6 +7,7 @@
     "fail_timeout": 400,
     "ttl": 2,
     "log_path": "/tmp/mp3.log",
+    "sleep_time": 300,
     "file_path": "/tmp/mp3/",
     "introducer_ip": "172.22.154.106"
 }

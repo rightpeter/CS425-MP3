@@ -331,7 +331,6 @@ func (c *Client) lsReplicasOfFile(filename string) {
 }
 
 func (c *Client) storesOnNode(nodeID string) {
-	fmt.Printf("storesOnNode: nodeID: %s", nodeID)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		fmt.Printf("dialing: %s", err)
@@ -343,7 +342,7 @@ func (c *Client) storesOnNode(nodeID string) {
 		fmt.Printf("storesOnNode: callStoresRPC failed, err: %v", err)
 	}
 
-	fmt.Printf("Stores of node %s are: \n", nodeID)
+	fmt.Printf("Stores are: \n")
 	for _, filename := range fileList {
 		fmt.Printf("\t%s", filename)
 	}
