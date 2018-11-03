@@ -7,3 +7,5 @@ main
 
 tmp/
 files/
+
+*.bin
