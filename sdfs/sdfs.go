@@ -255,7 +255,7 @@ func (s *SDFS) keepUpdatingMemberList() {
 			s.updateFailNodes(failNodes)
 			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			//log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
-			log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
+			// log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
 			s.pushIndexToAll()
 		}
 	}
