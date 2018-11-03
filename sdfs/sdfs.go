@@ -290,7 +290,13 @@ func (s *SDFS) keepUpdatingMemberList() {
 
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
+
+			start := time.Now()
 			s.updateFailNodes(failNodes)
+			if len(failNodes) > 0 {
+				fmt.Println(time.Since(start))
+			}
+
 			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			//log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
 			// log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
