@@ -91,13 +91,13 @@ func (c *Client) callGetVersionsRPC(client *rpc.Client, filename string, numVers
 }
 
 func (c *Client) pushFileToNode(filename string, filenameVersion string, nodeID string) error {
-	fmt.Printf("pushFileToNode: DialHTTP: ip: %s, port: %d", c.getIPFromID(nodeID), c.config.Port)
+	fmt.Printf("pushFileToNode: DialHTTP: ip: %s, port: %d\n", c.getIPFromID(nodeID), c.config.Port)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nodeID), c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 
-	fmt.Printf("pushFileToNode: readFileContent: %v", filename)
+	fmt.Printf("pushFileToNode: readFileContent: %v\n", filename)
 	fileContent, err := c.readFileContent(filename)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func (c *Client) putFile(filename string) {
 		return
 	}
 
-	log.Printf("%s is on %v", filename, reply.ReplicaList)
+	log.Printf("%s is on %v\n", filename, reply.ReplicaList)
 }
 
 func (c *Client) getFile(filename string) {
@@ -191,7 +191,7 @@ func (c *Client) getFile(filename string) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("GETFILE: replicalist %v", reply.ReplicaList)
+	fmt.Printf("GETFILE: replicalist %v\n", reply.ReplicaList)
 
 	fmt.Printf("Files with %s: %v \n", filename, reply.ReplicaList)
 
