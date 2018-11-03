@@ -54,7 +54,12 @@ func (i *Index) AddNewNode(id string) {
 // PrintIndex PrintIndex
 func (i *Index) PrintIndex() string {
 	ret := ""
-	ret += "Nodes to files:\n"
+	ret += "Nodes in system\n"
+	for k := range i.numFiles {
+		ret += k + ", "
+	}
+
+	ret += "\n\nNodes to files:\n"
 	for k, v := range i.index.NodesToFile {
 		ret += fmt.Sprintf("%s: %v\n", k, v)
 	}
