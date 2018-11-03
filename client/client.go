@@ -307,7 +307,7 @@ func main() {
 
 	getFilename := flag.String("get", "", "get {filename}")
 	putFilename := flag.String("put", "", "put {filename}")
-	deleteFilename := flag.String("delete", "", "-del {filename}")
+	deleteFilename := flag.String("del", "", "-del {filename}")
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
 
