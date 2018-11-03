@@ -4,7 +4,6 @@ import (
 	"CS425/CS425-MP3/model"
 	"crypto/md5"
 	"fmt"
-	"log"
 	"reflect"
 	"sort"
 )
@@ -48,7 +47,7 @@ func LoadFromGlobalIndexFile(file model.GlobalIndexFile) Index {
 
 // AddNewNode AddNewNode
 func (i *Index) AddNewNode(id string) {
-	log.Printf("Index: Added new node %v", id)
+	// log.Printf("Index: Added new node %v", id)
 	i.numFiles[id] = 0
 }
 
@@ -151,7 +150,7 @@ func (i *Index) RemoveNode(id string) []model.PullInstruction {
 }
 
 func (i *Index) removeFromSlice(ind int, slice []string) []string {
-	log.Println("removeFromSlice ", slice, ind)
+	// log.Println("removeFromSlice ", slice, ind)
 	if ind == len(slice) {
 		return slice[:ind]
 	}
@@ -181,7 +180,7 @@ func (i *Index) getNodesWithLeastFiles() []string {
 			lens = append(lens, v)
 		}
 	}
-	log.Println("getNodesWithLeastFiles lens:", lens)
+	// log.Println("getNodesWithLeastFiles lens:", lens)
 	sort.Ints(lens)
 	var Sortedids []string
 	for _, val := range lens {
@@ -194,10 +193,10 @@ func (i *Index) getNodesWithLeastFiles() []string {
 func (i *Index) AddFile(filename string, hash [SIZE]byte) (int, []string) {
 	_, ok := i.index.Filename[filename]
 	if !ok {
-		log.Println("Adding new file: ", filename)
+		// log.Println("Adding new file: ", filename)
 		return i.addFile(filename, hash)
 	}
-	log.Println("Updating file: ", filename)
+	// log.Println("Updating file: ", filename)
 	return i.updateFile(filename, hash)
 }
 
@@ -215,7 +214,7 @@ func (i *Index) addFile(filename string, hash [SIZE]byte) (int, []string) {
 	nodes := i.getNodesWithLeastFiles()
 	replicas := REPLICAS
 
-	log.Println("Nodes with least files: ", nodes)
+	// log.Println("Nodes with least files: ", nodes)
 	nodesWithFile := make([]string, 0)
 
 	fs := model.FileStructure{
@@ -318,7 +317,7 @@ func (i *Index) GetVersions(filename string, numVersions int) []model.FileVersio
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].Version > versions[j].Version
 	})
-	log.Println(versions)
+	// log.Println(versions)
 	if numVersions > len(versions) {
 		return versions
 	}
