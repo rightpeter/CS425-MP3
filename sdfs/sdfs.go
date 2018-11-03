@@ -168,18 +168,6 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 
 	newNodeList := []string{}
 	failNodeList := []string{}
-	if len(newNodeList) > 0 {
-		log.Printf("Before: %v", oldMemList)
-		log.Printf("updateMemberList: newNodeList: %v\n", newNodeList)
-		log.Printf("After: %v", newMemList)
-	}
-
-	if len(failNodeList) > 0 {
-		log.Printf("Before: %v", oldMemList)
-		log.Printf("updateMemberList: failNodeList: %v\n", failNodeList)
-		log.Printf("After: %v", newMemList)
-	}
-
 	i := 0
 	j := 0
 
@@ -207,6 +195,18 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 	}
 
 	s.sortedMemList = newMemList
+
+	if len(newNodeList) > 0 {
+		log.Printf("Before: %v", oldMemList)
+		log.Printf("updateMemberList: newNodeList: %v\n", newNodeList)
+		log.Printf("After: %v", newMemList)
+	}
+
+	if len(failNodeList) > 0 {
+		log.Printf("Before: %v", oldMemList)
+		log.Printf("updateMemberList: failNodeList: %v\n", failNodeList)
+		log.Printf("After: %v", newMemList)
+	}
 
 	if reElect {
 		s.reElect()
