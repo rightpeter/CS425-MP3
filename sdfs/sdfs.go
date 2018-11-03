@@ -311,6 +311,18 @@ func (s *SDFS) deleteFile(filename string) error {
 	return nil
 }
 
+// RPCPrintMemberList RPC
+func (s *SDFS) RPCPrintMemberList(a *string, b *string) error {
+	fmt.Printf("sortedMemList: %v\n", s.sortedMemList)
+	return nil
+}
+
+// RPCPrintIndex RPC
+func (s *SDFS) RPCPrintIndex(a *string, b *string) error {
+	fmt.Printf("sortedMemList: %v\n", s.index)
+	return nil
+}
+
 // RPCDeleteFile RPC to delete file
 func (s *SDFS) RPCDeleteFile(filename *string, ok *bool) error {
 	err := s.deleteFile(*filename)

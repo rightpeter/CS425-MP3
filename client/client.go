@@ -349,6 +349,36 @@ func (c *Client) storesOnNode(nodeID string) {
 	fmt.Println("")
 }
 
+func (c *Client) memList() error {
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		fmt.Printf("dialing: %s", err)
+	}
+
+	a := "a"
+	b := "b"
+	err = client.Call("SDFS.RPCPrintMemberList", &a, &b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) index() error {
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		fmt.Printf("dialing: %s", err)
+	}
+
+	a := "a"
+	b := "b"
+	err = client.Call("SDFS.RPCPrintIndex", &a, &b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	configFile, e := ioutil.ReadFile("./config.json")
 	if e != nil {
@@ -362,6 +392,8 @@ func main() {
 	deleteFilename := flag.String("del", "", "del {filename}")
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
+	memList := flag.String("memList", "", "memList")
+	index := flag.String("index", "", "memList")
 	getVersions := flag.String("get-versions", "", "getVersions {sdfsfilename} {num-versions} {localfilenam}")
 	// numVersions := flag.Int("numVersions", 0, "numVersion {number}")
 
@@ -377,6 +409,10 @@ func main() {
 		c.storesOnNode(*stores)
 	} else if *deleteFilename != "" {
 		c.deleteFile(*deleteFilename)
+	} else if *memList != "" {
+		c.memList()
+	} else if *index != "" {
+		c.index()
 	} else if *getVersions != "" {
 		args := os.Args[2:]
 		if len(args) < 3 {
