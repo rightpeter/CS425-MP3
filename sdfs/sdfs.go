@@ -200,18 +200,26 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 	return newNodeList, failNodeList
 }
 
-func (s *SDFS) updateNewNodes(newNodes []string) []string {
+func (s *SDFS) addRPCClientForNode(nodeID string) []string {
 	failNodes := []string{}
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", s.getIPFromID(nodeID), s.config.Port))
+	if err != nil {
+		log.Printf("updateMemberList: rpc.DialHTTP failed")
+		failNodes = append(failNodes, nodeID)
+	}
+	s.nodesRPCClients[nodeID] = client
+	return failNodes
+}
+
+func (s *SDFS) deleteRPCClientForNode(nodeID string) error {
+	delete(s.nodesRPCClients, nodeID)
+	return nil
+}
+
+func (s *SDFS) updateNewNodes(newNodes []string) {
 	for _, node := range newNodes {
 		s.index.AddNewNode(node)
-		client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", s.getIPFromID(node), s.config.Port))
-		if err != nil {
-			log.Printf("updateMemberList: rpc.DialHTTP failed")
-			failNodes = append(failNodes, node)
-		}
-		s.nodesRPCClients[node] = client
 	}
-	return failNodes
 }
 
 func (s *SDFS) updateFailNodes(failNodes []string) []string {
@@ -225,7 +233,6 @@ func (s *SDFS) updateFailNodes(failNodes []string) []string {
 				failFailNodes = append(failFailNodes, node)
 			}
 		}
-		delete(s.nodesRPCClients, node)
 	}
 	return failFailNodes
 }
@@ -234,6 +241,14 @@ func (s *SDFS) keepUpdatingMemberList() {
 	for {
 		time.Sleep(time.Duration(s.config.SleepTime) * time.Millisecond)
 		newNodes, failNodes := s.updateMemberList()
+		for _, nodeID := range newNodes {
+			s.addRPCClientForNode(nodeID)
+		}
+
+		for _, nodeID := range failNodes {
+			s.deleteRPCClientForNode(nodeID)
+		}
+
 		if s.isMaster() {
 			s.updateNewNodes(newNodes)
 			s.updateFailNodes(failNodes)
