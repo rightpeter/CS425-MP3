@@ -327,7 +327,7 @@ func (s *SDFS) startFailureDetector() {
 
 	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
 	go s.failureDetector.ServerLoop()
-	go s.failureDetector.FailureDetection()
+	s.failureDetector.FailureDetection()
 	fmt.Printf("failureDetector has been killed!")
 }
 
