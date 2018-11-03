@@ -158,7 +158,7 @@ func (s *SDFS) getRPCClient(nodeID string) (*rpc.Client, error) {
 
 func (s *SDFS) updateMemberList() ([]string, []string) {
 	newMemList := s.failureDetector.GetMemberList()
-	log.Printf("updateMemberList: %v", newMemList)
+	// log.Printf("updateMemberList: %v", newMemList)
 	reElect := false
 	if s.sortedMemList[0] != newMemList[0] {
 		reElect = true
