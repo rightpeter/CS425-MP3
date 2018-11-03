@@ -293,14 +293,15 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 	for _, version := range reply {
 		for _, nID := range version.ReplicaList {
 			content := c.getFileFromNode(version.Filename, nID)
-			fmt.Printf("Version: %d: \n", version.Version)
-			fmt.Printf("Content: %s\n", content)
-			outContent = append(outContent, []byte(version.Filename)...)
+			outContent = append(outContent, []byte("File begining....\n\n")...)
+			outContent = append(outContent, []byte(fmt.Sprintf("Version: %d: \n", version.Version))...)
 			outContent = append(outContent, content...)
-			fmt.Printf("-------------------------------------------\n\n")
+			outContent = append(outContent, []byte("-------------------------------------------\n\n")...)
 		}
 	}
-	c.writeFile(c.config.FilePath+outFileName, outContent)
+
+	fmt.Printf("%s", outContent)
+	c.writeFile("./files/"+outFileName, outContent)
 }
 
 func (c *Client) lsReplicasOfFile(filename string) {
