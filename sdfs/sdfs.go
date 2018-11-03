@@ -377,6 +377,17 @@ func (s *SDFS) RPCDeleteFile(filename *string, ok *bool) error {
 	return nil
 }
 
+// RPCDeleteFileStar RPC to delete file
+func (s *SDFS) RPCDeleteFileStar(filename *string, ok *bool) error {
+	err := s.deleteFile(*filename + "*")
+	if err != nil {
+		*ok = false
+		return err
+	}
+	*ok = true
+	return nil
+}
+
 // RPCPutFile RPC to add file
 func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithReplica) error {
 	if s.isMaster() {
@@ -392,6 +403,24 @@ func (s *SDFS) RPCPutFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWi
 		}
 	} else {
 		err := s.putFile(file, reply)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RPCRemoveFile RPC to add file
+func (s *SDFS) RPCRemoveFile(filename *string, nodes *[]string) error {
+	if s.isMaster() {
+		*nodes = s.index.RemoveFile(*filename)
+
+		failList := s.pushIndexToAll()
+		if len(failList) > 0 {
+			return fmt.Errorf("Push Index to nodes: %v failed", failList)
+		}
+	} else {
+		err := s.removeFile(filename, nodes)
 		if err != nil {
 			return err
 		}
@@ -513,6 +542,19 @@ func (s *SDFS) putFile(file *model.RPCAddFileArgs, reply *model.RPCFilenameWithR
 	}
 
 	err = client.Call("SDFS.RPCPutFile", file, reply)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SDFS) removeFile(filename *string, nodes *[]string) error {
+	client, err := s.getRPCClient(s.master)
+	if err != nil {
+		return err
+	}
+
+	err = client.Call("SDFS.RPCRemoveFile", filename, nodes)
 	if err != nil {
 		return err
 	}
