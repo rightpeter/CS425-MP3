@@ -53,7 +53,7 @@ func (i *Index) AddNewNode(id string) {
 }
 
 // PrintIndex PrintIndex
-func (i *Index) PrintIndex() {
+func (i *Index) PrintIndex() string {
 	ret := ""
 	ret += "Nodes to files:\n"
 	for k, v := range i.index.NodesToFile {
@@ -64,7 +64,7 @@ func (i *Index) PrintIndex() {
 	for k, v := range i.index.FileToNodes {
 		ret += fmt.Sprintf("%s: %v\n", k, v)
 	}
-
+	return ret
 }
 
 // LsReplicasOfFile ls replicas of file

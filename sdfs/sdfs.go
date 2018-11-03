@@ -319,7 +319,7 @@ func (s *SDFS) RPCPrintMemberList(a *string, b *string) error {
 
 // RPCPrintIndex RPC
 func (s *SDFS) RPCPrintIndex(a *string, b *string) error {
-	s.index.PrintIndex()
+	fmt.Printf("Index: \n%v\n", s.index.PrintIndex())
 	return nil
 }
 
