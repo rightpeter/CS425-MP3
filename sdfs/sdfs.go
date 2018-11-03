@@ -240,10 +240,10 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 
 func (s *SDFS) addRPCClientForNode(nodeID string) []string {
 	failNodes := []string{}
-	log.Printf("addRPCClientForNode: try to add rpc client to %s\n", nodeID)
+	fmt.Printf("addRPCClientForNode: try to add rpc client to %s\n", nodeID)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", s.getIPFromID(nodeID), s.config.Port))
 	if err != nil {
-		log.Printf("updateMemberList: rpc.DialHTTP failed")
+		fmt.Printf("updateMemberList: rpc.DialHTTP failed")
 		failNodes = append(failNodes, nodeID)
 	}
 	s.nodesRPCClients[nodeID] = client
@@ -701,21 +701,7 @@ func main() {
 
 	log.SetOutput(f)
 
-	for {
-		err := s.failureDetector.JoinToGroup()
-		if err != nil {
-			log.Printf("join to group failed: %s\n", err.Error())
-			log.Printf("try to join to group 5 seconds later...")
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		log.Printf("join to group successfully\n\n")
-		break
-	}
-
-	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
-	go s.failureDetector.ServerLoop()
-	go s.failureDetector.FailureDetection()
+	go s.startFailureDetector()
 	go s.keepUpdatingMemberList()
 
 	err = s.initIndex()
