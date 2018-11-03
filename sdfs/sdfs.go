@@ -168,31 +168,53 @@ func (s *SDFS) updateMemberList() ([]string, []string) {
 
 	newNodeList := []string{}
 	failNodeList := []string{}
-	i := 0
-	j := 0
 
-	for i < len(s.sortedMemList) && j < len(newMemList) {
-		if s.sortedMemList[i] > newMemList[j] {
-			failNodeList = append(failNodeList, s.sortedMemList[i])
-			i++
-		} else if s.sortedMemList[i] == newMemList[j] {
-			i++
-			j++
-		} else if i < len(s.sortedMemList) && j < len(newMemList) && s.sortedMemList[i] < newMemList[j] {
-			newNodeList = append(newNodeList, newMemList[j])
-			j++
+	for _, node := range newMemList {
+		k := true
+		for _, oldNode := range oldMemList {
+			if oldNode == node {
+				k = false
+			}
+		}
+		if k {
+			newNodeList = append(newNodeList, node)
 		}
 	}
 
-	for i < len(s.sortedMemList) {
-		failNodeList = append(failNodeList, s.sortedMemList[i])
-		i++
+	for _, oldNode := range oldMemList {
+		k := true
+		for _, newNode := range newMemList {
+			if oldNode == newNode {
+				k = false
+			}
+		}
+		if k {
+			failNodeList = append(failNodeList, oldNode)
+		}
 	}
 
-	for j < len(newMemList) {
-		newNodeList = append(newNodeList, newMemList[j])
-		j++
-	}
+	//for i < len(s.sortedMemList) && j < len(newMemList) {
+	//if s.sortedMemList[i] > newMemList[j] {
+	//failNodeList = append(failNodeList, s.sortedMemList[i])
+	//i++
+	//} else if s.sortedMemList[i] == newMemList[j] {
+	//i++
+	//j++
+	//} else if i < len(s.sortedMemList) && j < len(newMemList) && s.sortedMemList[i] < newMemList[j] {
+	//newNodeList = append(newNodeList, newMemList[j])
+	//j++
+	//}
+	//}
+
+	//for i < len(s.sortedMemList) {
+	//failNodeList = append(failNodeList, s.sortedMemList[i])
+	//i++
+	//}
+
+	//for j < len(newMemList) {
+	//newNodeList = append(newNodeList, newMemList[j])
+	//j++
+	//}
 
 	s.sortedMemList = newMemList
 
