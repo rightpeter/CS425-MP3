@@ -286,12 +286,15 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 		return
 	}
 
+	fmt.Printf("filename: %s\n", filename)
 	// TODO: Could possible use a goroutine
 	for _, version := range reply {
 		for _, nID := range version.ReplicaList {
 			content := c.getFileFromNode(version.Filename, nID)
-			fmt.Printf("filename: %s", version.Filename)
-			fmt.Printf("Content: %v", content)
+			fmt.Printf("Version: %d: \n", version.Version)
+			fmt.Printf("version: %v", version)
+			fmt.Printf("Content: %s\n", content)
+			fmt.Printf("-------------------------------------------\n\n")
 		}
 	}
 }

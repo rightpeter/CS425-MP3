@@ -369,7 +369,8 @@ func (s *SDFS) RPCGetLatestVersions(args *model.RPCGetLatestVersionsArgs, reply 
 	tmpReply := []model.RPCGetLatestVersionsReply{}
 	for _, file := range fileList {
 		tmpReply = append(tmpReply, model.RPCGetLatestVersionsReply{
-			Filename:    args.Filename,
+			Filename:    fmt.Sprintf("%s_%d", args.Filename, file.Version),
+			Version:     file.Version,
 			ReplicaList: file.Nodes,
 		})
 	}

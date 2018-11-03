@@ -30,6 +30,7 @@ type RPCGetLatestVersionsArgs struct {
 // RPCGetLatestVersionsReply reply
 type RPCGetLatestVersionsReply struct {
 	Filename    string
+	Version     int
 	ReplicaList []string
 }
 
