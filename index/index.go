@@ -79,7 +79,13 @@ func (i *Index) LsReplicasOfFile(filename string) []string {
 // StoresOnNode return files stored on node
 func (i *Index) StoresOnNode(nodeID string) []string {
 	files := []string{}
+	table := make(map[string]int)
 	for _, file := range i.index.NodesToFile[nodeID] {
+		_, ok := table[file.Filename]
+		if ok {
+			continue
+		}
+		table[file.Filename] = 1
 		files = append(files, file.Filename)
 	}
 	return files
