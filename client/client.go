@@ -57,7 +57,6 @@ func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCF
 }
 
 func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPCFile, error) {
-	// fmt.Println("filename: ", filename)
 	var reply model.RPCFile
 	err := client.Call("SDFS.RPCPullFile", &filename, &reply)
 	if err != nil {
@@ -68,12 +67,25 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 }
 
 func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (bool, error) {
-	// fmt.Println("filename: ", filename)
 	var reply bool
 	err := client.Call("SDFS.RPCDeleteFile", &filename, &reply)
 	if err != nil {
 		fmt.Println(err)
 		return false, err
+	}
+	return reply, nil
+}
+
+func (c *Client) callGetVersionsRPC(client *rpc.Client, filename string, numVersions int) ([]model.RPCGetLatestVersionsReply, error) {
+	args := model.RPCGetLatestVersionsArgs{
+		Filename: filename,
+		Versions: numVersions,
+	}
+	var reply []model.RPCGetLatestVersionsReply
+	err := client.Call("SDFS.RPCGetLatestVersions", &args, &reply)
+	if err != nil {
+		fmt.Println(err)
+		return []model.RPCGetLatestVersionsReply{}, err
 	}
 	return reply, nil
 }
@@ -206,21 +218,17 @@ func (c *Client) getFile(filename string) {
 	}
 }
 
-// func (c *Client) putFile(filename string) {
-// 	fmt.Println("putFile: ", filename)
-// 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
-// 	if err != nil {
-// 		log.Fatal("dialing:", err)
-// 	}
-// 	fmt.Println("Connection made")
-
-// 	reply, err := c.callPutFileRPC(client, filename)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	log.Printf("%s is on %v", filename, reply.ReplicaList)
-// }
+func (c *Client) getFileFromNode(filename string, nodeID string) []byte {
+	cl, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nodeID), c.config.Port))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	file, err := c.callPullFileRPC(cl, filename)
+	if err != nil {
+		return nil
+	}
+	return file.FileContent
+}
 
 func (c *Client) deleteFile(filename string) {
 	fmt.Println("deleteFile: ", filename)
@@ -256,6 +264,43 @@ func (c *Client) deleteFile(filename string) {
 			fmt.Printf("Deleted: %s\n", reply.Filename)
 		} else {
 			fmt.Printf("Failed to delete: %s\n", reply.Filename)
+		}
+	}
+}
+
+func (c *Client) getVersionForFile(filename string, numVersions int, outFileName string) {
+	fmt.Println("getVersionForFile: ", filename, numVersions)
+	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+	reply, err := c.callGetVersionsRPC(client, filename, numVersions)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("getVersionForFile: Files with %s: %v \n", filename, reply)
+
+	if len(reply) == 0 {
+		log.Println("File not available")
+		return
+	}
+
+	// TODO: Could possible use a goroutine
+	for _, version := range reply {
+		for _, nID := range version.ReplicaList {
+			cl, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(nID), c.config.Port))
+			if err != nil {
+				log.Fatal("dialing:", err)
+			}
+			versions, err := c.callGetVersionsRPC(cl, version.Filename, numVersions)
+			if err != nil {
+				return
+			}
+			content := c.getFileFromNode(version.Filename, nID)
+
+			fmt.Printf("filename: %s", version.Filename)
+			fmt.Printf("Content: %v", content)
 		}
 	}
 }
@@ -313,6 +358,7 @@ func main() {
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
 	getVersions := flag.String("get-versions", "", "getVersions {sdfsfilename} {num-versions} {localfilenam}")
+	numVersions := flag.Int("numVersions", 0, "numVersion {number}")
 
 	flag.Parse()
 
@@ -336,7 +382,7 @@ func main() {
 				fmt.Printf("num-versions should be a number!")
 			}
 			fmt.Printf("getVersions {%s} {%d} {%v}", args[0], versions, args[2])
-			c.getVersions(args[0], versions, args[2])
+			c.getVersionForFile(args[0], versions, args[2])
 		}
 	}
 
