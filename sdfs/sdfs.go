@@ -471,7 +471,7 @@ func (s *SDFS) RPCLsReplicasOfFile(filename *string, replicaList *[]string) erro
 
 // RPCStoresOnNode RPC
 func (s *SDFS) RPCStoresOnNode(nodeID *string, files *[]string) error {
-	*files = s.index.StoresOnNode(*nodeID)
+	*files = s.index.StoresOnNode(s.id)
 	return nil
 }
 
