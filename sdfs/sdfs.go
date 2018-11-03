@@ -319,7 +319,7 @@ func (s *SDFS) RPCPrintMemberList(a *string, b *string) error {
 
 // RPCPrintIndex RPC
 func (s *SDFS) RPCPrintIndex(a *string, b *string) error {
-	fmt.Printf("sortedMemList: %v\n", s.index)
+	s.index.PrintIndex()
 	return nil
 }
 
