@@ -56,6 +56,17 @@ func (c *Client) callGetFileRPC(client *rpc.Client, filename string) (model.RPCF
 	return reply, nil
 }
 
+func (c *Client) callRemoveFileRPC(client *rpc.Client, filename string) ([]string, error) {
+	// fmt.Println("filename: ", filename)
+	var reply []string
+	err := client.Call("SDFS.RPCRemoveFile", &filename, &reply)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return reply, nil
+}
+
 func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPCFile, error) {
 	var reply model.RPCFile
 	err := client.Call("SDFS.RPCPullFile", &filename, &reply)
@@ -66,9 +77,9 @@ func (c *Client) callPullFileRPC(client *rpc.Client, filename string) (model.RPC
 	return reply, nil
 }
 
-func (c *Client) callDeleteFileRPC(client *rpc.Client, filename string) (bool, error) {
+func (c *Client) callDeleteFileStarRPC(client *rpc.Client, filename string) (bool, error) {
 	var reply bool
-	err := client.Call("SDFS.RPCDeleteFile", &filename, &reply)
+	err := client.Call("SDFS.RPCDeleteFileStar", &filename, &reply)
 	if err != nil {
 		fmt.Println(err)
 		return false, err
@@ -236,34 +247,34 @@ func (c *Client) deleteFile(filename string) {
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
-	reply, err := c.callGetFileRPC(client, filename)
+	reply, err := c.callRemoveFileRPC(client, filename)
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("deleteFile: Files with %s: %v \n", filename, reply.ReplicaList)
+	fmt.Printf("deleteFile: Files with %s: %v \n", filename, reply)
 
-	if len(reply.ReplicaList) == 0 {
+	if len(reply) == 0 {
 		log.Println("File not available")
 		return
 	}
 
-	log.Printf("Nodes with FileName: %v \n", reply.ReplicaList)
+	log.Printf("Nodes with FileName: %v \n", reply)
 
-	for _, id := range reply.ReplicaList {
+	for _, id := range reply {
 		cl, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.getIPFromID(id), c.config.Port))
 		if err != nil {
 			log.Fatal("dialing:", err)
 		}
 		// TODO: Could possible use a goroutine
-		del, err := c.callDeleteFileRPC(cl, reply.Filename)
+		del, err := c.callDeleteFileStarRPC(cl, filename)
 		if err != nil {
 			return
 		}
 		if del {
-			fmt.Printf("Deleted: %s\n", reply.Filename)
+			fmt.Printf("Deleted: %s\n", filename)
 		} else {
-			fmt.Printf("Failed to delete: %s\n", reply.Filename)
+			fmt.Printf("Failed to delete: %s\n", filename)
 		}
 	}
 }
