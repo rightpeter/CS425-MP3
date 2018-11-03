@@ -159,7 +159,7 @@ func (s *SDFS) getRPCClient(nodeID string) (*rpc.Client, error) {
 
 func (s *SDFS) updateMemberList() ([]string, []string) {
 	newMemList := s.failureDetector.GetMemberList()
-	log.Printf("updateMemberList: %v", newMemList)
+	// log.Printf("updateMemberList: %v", newMemList)
 	reElect := false
 	if s.sortedMemList[0] != newMemList[0] {
 		reElect = true
@@ -256,7 +256,7 @@ func (s *SDFS) keepUpdatingMemberList() {
 			s.updateFailNodes(failNodes)
 			//log.Printf("keepUpdatingMemberList: nodesRPCclient: %v", s.nodesRPCClients)
 			//log.Printf("keepUpdatingMemberList: updated newNodes: %v, failNodes: %v", newNodes, failNodes)
-			log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
+			// log.Printf("keepUpdatingMemberList: s.sortedMemList: %v", s.sortedMemList)
 			s.pushIndexToAll()
 		}
 	}
@@ -320,7 +320,7 @@ func (s *SDFS) RPCPrintMemberList(a *string, b *string) error {
 
 // RPCPrintIndex RPC
 func (s *SDFS) RPCPrintIndex(a *string, b *string) error {
-	fmt.Printf("sortedMemList: %v\n", s.index)
+	fmt.Printf("Index: \n%v\n", s.index.PrintIndex())
 	return nil
 }
 
