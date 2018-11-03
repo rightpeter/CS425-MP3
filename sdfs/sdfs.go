@@ -329,6 +329,7 @@ func (s *SDFS) startFailureDetector() {
 	log.Printf("Starting server on IP: %s and port: %d\n\n", s.failureDetector.GetIP(), s.failureDetector.GetPort())
 	go s.failureDetector.ServerLoop()
 	s.failureDetector.FailureDetection()
+	fmt.Printf("failureDetector has been killed!")
 }
 
 func (s *SDFS) writeFile(filename string, fileContent []byte) error {
