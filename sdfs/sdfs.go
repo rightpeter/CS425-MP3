@@ -121,7 +121,7 @@ func (s *SDFS) pushIndexToAll() []string {
 		if node != s.id {
 			err := s.pushIndex(node)
 			if err != nil {
-				fmt.Printf("pushIndexToAll: pushIndex to %s err: %v\n", node, err)
+				//fmt.Printf("pushIndexToAll: pushIndex to %s err: %v\n", node, err)
 				failList = append(failList, node)
 			}
 		}
