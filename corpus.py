@@ -13,7 +13,7 @@ def main():
         call(["go", "run", "client/client.go", "-put", file_name])
         time_end = time.time()
 
-        print("push {} used {}".format(time_end - time_start))
+        print("push {} used {}".format(file_name, time_end - time_start))
         total_time += time_end - time_start
         time.sleep(0.5)
 
