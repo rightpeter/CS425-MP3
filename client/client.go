@@ -249,7 +249,9 @@ func (c *Client) getFile(filename string) {
 			return
 		}
 		// TODO: could possible save in cache
-		fmt.Printf("Content:\n%s\n", file.FileContent)
+		fmt.Printf("Saved in files folder:\n%s\n", file.FileContent)
+		c.writeFile("./files/"+filename, file.FileContent)
+		fmt.Printf("Time for -get: %v\n", time.Since(t0))
 		break
 	}
 	fmt.Printf("Time for -get: %v\n", time.Since(t0))
