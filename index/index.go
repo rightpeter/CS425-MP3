@@ -319,8 +319,9 @@ func (i *Index) RemoveFile(filename string) []string {
 			}
 		}
 		i.index.NodesToFile[id] = newFiles
-		delete(i.index.FileToNodes, filename)
 	}
+	delete(i.index.FileToNodes, filename)
+	delete(i.index.Filename, filename)
 	return nodes
 }
 

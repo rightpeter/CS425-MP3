@@ -151,7 +151,7 @@ func (c *Client) callPutFileRPC(client *rpc.Client, filename string) (model.RPCF
 	fmt.Printf("Replica list: %v\n", reply.ReplicaList)
 	for _, nID := range reply.ReplicaList {
 		fmt.Printf("Pushing file %s to %v", reply.Filename, nID)
-		c.pushFileToNode(filename, reply.Filename, nID)
+		go c.pushFileToNode(filename, reply.Filename, nID)
 	}
 	return reply, nil
 }
