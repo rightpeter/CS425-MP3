@@ -195,6 +195,25 @@ func (c *Client) putFile(filename string) {
 	fmt.Printf("Time for -put: %v\n", time.Since(t0))
 }
 
+func (c *Client) putFolder(folder string) {
+	t0 := time.Now()
+
+	fmt.Println("putFolder: ", folder)
+
+	files, err := ioutil.ReadDir("./files/" + folder)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		filename := f.Name()
+		c.putFile(filename)
+		fmt.Printf("Push %s finished!", filename)
+	}
+
+	fmt.Printf("Time for -put-folder: %v\n", time.Since(t0))
+}
+
 func (c *Client) getFile(filename string) {
 	fmt.Println("getFile: ", filename)
 	t0 := time.Now()
@@ -424,6 +443,7 @@ func main() {
 
 	getFilename := flag.String("get", "", "get {filename}")
 	putFilename := flag.String("put", "", "put {filename}")
+	putFolder := flag.String("put-folder", "", "put-folder {folder}")
 	deleteFilename := flag.String("del", "", "del {filename}")
 	ls := flag.String("ls", "", "ls {filename}")
 	stores := flag.String("stores", "", "stores {nodeID}")
@@ -439,6 +459,8 @@ func main() {
 		c.getFile(*getFilename)
 	} else if *putFilename != "" {
 		c.putFile(*putFilename)
+	} else if *putFolder != "" {
+		c.putFolder(*putFolder)
 	} else if *ls != "" {
 		c.lsReplicasOfFile(*ls)
 	} else if *stores != "" {
