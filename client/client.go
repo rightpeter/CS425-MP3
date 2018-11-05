@@ -312,7 +312,7 @@ func (c *Client) deleteFile(filename string) {
 func (c *Client) getVersionForFile(filename string, numVersions int, outFileName string) {
 
 	table := make(map[string]int)
-	fmt.Println("getVersionForFile: ", filename, numVersions)
+	fmt.Printf("filename: %s, versions: %d", filename, numVersions)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
@@ -331,7 +331,6 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 
 	outContent := make([]byte, 0)
 
-	fmt.Printf("filename: %s\n", filename)
 	// TODO: Could possible use a goroutine
 	for _, version := range reply {
 		for _, nID := range version.ReplicaList {
@@ -341,6 +340,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 			}
 			table[version.Filename] = 1
 			content := c.getFileFromNode(version.Filename, nID)
+			fmt.Printf("Fetched %s version%d: %s\n", filename, version.Version, content[:100])
 			outContent = append(outContent, []byte(fmt.Sprintf("Version: %d: \n", version.Version))...)
 			outContent = append(outContent, []byte("----------------File begining--------------\n\n")...)
 			outContent = append(outContent, content...)
@@ -348,7 +348,6 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 		}
 	}
 
-	fmt.Printf("%s", outContent)
 	c.writeFile("./fetched_files/"+outFileName, outContent)
 }
 
@@ -485,7 +484,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("num-versions should be a number!")
 			}
-			fmt.Printf("getVersions {%s} {%d} {%v}", args[0], versions, args[2])
+			//fmt.Printf("getVersions {%s} {%d} {%v}", args[0], versions, args[2])
 			c.getVersionForFile(args[0], versions, args[2])
 			fmt.Printf("Time for -get-versions with numVersions %d : %v\n", versions, time.Since(t0))
 		}
