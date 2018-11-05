@@ -312,7 +312,7 @@ func (c *Client) deleteFile(filename string) {
 func (c *Client) getVersionForFile(filename string, numVersions int, outFileName string) {
 
 	table := make(map[string]int)
-	fmt.Printf("filename: %s, versions: %d", filename, numVersions)
+	fmt.Printf("filename: %s, versions: %d\n\n", filename, numVersions)
 	client, err := rpc.DialHTTP("tcp", fmt.Sprintf("%s:%d", c.config.IP, c.config.Port))
 	if err != nil {
 		log.Fatal("dialing:", err)
@@ -322,7 +322,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 		return
 	}
 
-	fmt.Printf("getVersionForFile: Files with %s: %v \n", filename, reply)
+	fmt.Printf("version information: %v \n\n", reply)
 
 	if len(reply) == 0 {
 		log.Println("File not available")
