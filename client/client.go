@@ -344,7 +344,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 			outContent = append(outContent, []byte(fmt.Sprintf("Version: %d: \n", version.Version))...)
 			outContent = append(outContent, []byte("----------------File begining--------------\n\n")...)
 			outContent = append(outContent, content...)
-			outContent = append(outContent, []byte("------------------End File-----------------\n\n")...)
+			outContent = append(outContent, []byte("\n------------------End File-----------------\n\n")...)
 		}
 	}
 
