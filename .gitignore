@@ -7,5 +7,6 @@ main
 
 tmp/
 files/
+fetched_files/
 
 *.bin

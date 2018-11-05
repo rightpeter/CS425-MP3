@@ -250,7 +250,7 @@ func (c *Client) getFile(filename string) {
 		}
 		// TODO: could possible save in cache
 		fmt.Printf("Saved in files folder:\n%s\n", file.FileContent)
-		c.writeFile("./files/"+filename, file.FileContent)
+		c.writeFile("./fetched_files/"+filename, file.FileContent)
 		fmt.Printf("Time for -get: %v\n", time.Since(t0))
 		break
 	}
@@ -349,7 +349,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 	}
 
 	fmt.Printf("%s", outContent)
-	c.writeFile("./files/"+outFileName, outContent)
+	c.writeFile("./fetched_files/"+outFileName, outContent)
 }
 
 func (c *Client) lsReplicasOfFile(filename string) {
