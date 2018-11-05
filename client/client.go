@@ -340,7 +340,7 @@ func (c *Client) getVersionForFile(filename string, numVersions int, outFileName
 			}
 			table[version.Filename] = 1
 			content := c.getFileFromNode(version.Filename, nID)
-			fmt.Printf("Fetched %s version%d: ...%s\n", filename, version.Version, content[len(content)-100:])
+			fmt.Printf("Fetched %s version%d: %s......%s\n", filename, version.Version, content[:100], content[len(content)-100:])
 			outContent = append(outContent, []byte(fmt.Sprintf("Version: %d: \n", version.Version))...)
 			outContent = append(outContent, []byte("----------------File begining--------------\n\n")...)
 			outContent = append(outContent, content...)
